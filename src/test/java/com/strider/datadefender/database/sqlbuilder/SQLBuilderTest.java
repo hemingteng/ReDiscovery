@@ -26,7 +26,7 @@ import org.junit.Test;
 /**
  * One class to test all sqlbuilder.  Split out if this class becomes too large.
  * @author Akira Matsuo
- *
+ * @author Redglue team (www.redglue.eu)
  */
 public class SQLBuilderTest {
     private final String schema = "test_schema";
@@ -53,10 +53,10 @@ public class SQLBuilderTest {
     @Test
     public void testSchemaPrefix() {
         ISQLBuilder builder = new MSSQLSQLBuilder(noSchema);
-        assertEquals(table, builder.prefixSchema(table));
+        assertEquals("[" + table + "]", builder.prefixSchema(table));
 
         builder = new MSSQLSQLBuilder(withSchema);
-        assertEquals(schema + "." + table, builder.prefixSchema(table));
+        assertEquals("[" + schema + "].[" + table + "]", builder.prefixSchema(table));
     }
 
 }

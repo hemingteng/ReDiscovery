@@ -18,9 +18,11 @@ package com.strider.datadefender.database.sqlbuilder;
 
 import java.util.Properties;
 
+import com.strider.datadefender.utils.CommonUtils;
+
 /**
  * @author Armenak Grigoryan
- * @author Luis Marques
+ * @author Redglue team (www.redglue.eu)
  */
 public class MSSQLSQLBuilder extends SQLBuilder{
 
@@ -28,15 +30,31 @@ public class MSSQLSQLBuilder extends SQLBuilder{
         super(databaseProperties);
     }
 
+
     @Override
-      public String buildSelectWithLimit(final String sqlString, final int limit) {
-          final StringBuilder sql = new StringBuilder(sqlString);
-          final String limitTOP = String.format("TOP %d ", limit);
+    public String buildSelectWithLimit(final String sqlString, final int limit) {
+        StringBuilder sql = new StringBuilder(sqlString);
+        String limitTOP = String.format("TOP %d ", limit);
 
-          if (limit != 0) {
-            sql.insert(7, limitTOP);
-          }
-          return sql.toString();
-      }
+        if (limit != 0) {
+          sql.insert(7, limitTOP);
+        }
+        return sql.toString();
+    }
 
-  }
+    @Override
+    public String prefixSchema(final String tableName) {
+        final String schema = databaseProperties.getProperty("schema");
+        String prefixAndTableName;
+
+        // Add [] in order to espace special characters and reserved SQL keywords (Example: table with name Order) in SQLServer.
+        if (CommonUtils.isEmptyString(schema)) {
+            prefixAndTableName = "[" + tableName + "]";
+            return prefixAndTableName;
+        } else {
+            prefixAndTableName = "[" + schema + "]" + ".[" + tableName+"]";
+        }
+
+        return prefixAndTableName;
+    }
+}
