@@ -19,7 +19,7 @@ Table of content
 Disclaimer
 -------
 * This is a fork from original work called DataDefender (https://github.com/armenak/DataDefender)
-The reasons behind fork are:
+. The reasons behind fork are:
 * Remove the Anonymizer part of the original project, as commercial and open source RDBMS have different ways to anonymize data. Data masking is a vast topic on databases and most of the time a very complex issue and can't be solved using this tool;
 * Remove of Data Generator, as this tools should focus on scanning real data that can be in any environment;
 * Add of other OpenNLP techniques based on Dictionary and Regex search to improve performance and accuracy of "sometimes" not very good Max Entropy NLP models.
