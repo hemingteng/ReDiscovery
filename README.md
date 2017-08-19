@@ -18,8 +18,7 @@ Table of content
 
 Disclaimer
 -------
-* This is a fork from original work called DataDefender (https://github.com/armenak/DataDefender)
-The reasons behind fork are:
+* This is a fork from original work called DataDefender (https://github.com/armenak/DataDefender). The reasons behind fork are:
 * Remove the Anonymizer part of the original project, as commercial and open source RDBMS have different ways to anonymize data. Data masking is a vast topic on databases and most of the time a very complex issue and can't be solved using this tool;
 * Remove of Data Generator, as this tools should focus on scanning real data that can be in any environment;
 * Add of other OpenNLP techniques based on Dictionary and Regex search to improve performance and accuracy of "sometimes" not very good Max Entropy NLP models.
@@ -44,9 +43,8 @@ Prerequisites
 Build from source
 -----------------
 1. Download ZIP file and unzip in a directory of your choice, or clone repo
-2. cd {dir}/DataDefender/
-3. mvn install
-4. DataDefender.jar will be located in "target" directory {dir}/DataDefender/target/
+2. mvn install
+3. RedataSense.jar will be located in "target" directory target/
 
 Contributing
 ------------
@@ -64,7 +62,7 @@ How to run
 The toolkit is implemented as a command line program. To run it first build the application as above (mvn install). This
 will generate an executeable jar file in the "target" directory. Once this has been done you can get help by typing:
 
-    java -jar DataDefender.jar --help
+    java -jar RedataSense.jar --help
 
 The toolkit can be run in anonymizer mode, and three different discovery modes (file, column, and database discovery). For column and database discovery modes you need to provide
 the database property file which defines which database to connect to and how to connect. The location of this property file it passed in using the -P or --data switch.
@@ -74,16 +72,13 @@ All modes support an optional list of tables at the end to use for either discov
 File Discovery
 --------------
 File discovery will attempt to find a sensitive personal information in binary and text files located on the file system.
-
-Sample project can be found here: https://github.com/armenak/DataDefender/tree/master/sample_projects/file_discovery
-
 In order to run File Discovery, please use filediscovery.properties file created in the sample project and adjust it for your needs. Specifically, probability threshold and the directory where files that needs to be scanned will need to be modified.
 
 Column Discovery
 ----------------
 In this mode the tool attempts to query your database and identified columns that should be anonymized based on their names.  When -r is provided a sample requirements file (which can be modified and used the anonymizer stage) will be created based on the columns discovered. To run in this mode type the following:
 
-    java -jar DataDefender.jar database-discovery -c --data <db.properties> --column-discovery <columndiscovery.properties> [-r -R <requirement_output_file>]
+    java -jar RedataSense.jar database-discovery -c --data <db.properties> --column-discovery <columndiscovery.properties>
 
 Where:
     <db.properties>              - Path and file name of the file containing database connection properties
@@ -91,14 +86,12 @@ Where:
 
     <columndiscovery.properties> - Path and file name of the file containing column discovery properties
                                    (see src/main/resources/columndiscovery.properties for an example)
-    <requirement_output_file>    - Optional name of sample requirement file to be created (-r must also be specified)
-
 
 Data Discovery
 ------------------
 To run the tool in Data Discovery mode, pass '-d' to discover.  DA will perform an NLP scan of data in the database and return columns that have a match score greater than the value of probability_threshold specified in datadiscovery.properties file.  When -r is provided a sample requirements file (which can be modified and used the anonymizer stage) will be created based on the columns discovered by the DA.
 
-    java -jar DataDefender.jar database-discovery -d --data <db.properties> --data-discovery <datadiscovery.properties> [-r -R <requirement_output_file>]
+    java -jar RedataSense.jar database-discovery -d --data <db.properties> --data-discovery <datadiscovery.properties>
 
 Where:
     <db.properties>            - Path and file name of the file containing database connection properties
@@ -106,8 +99,6 @@ Where:
 
     <datadiscovery.properties> - Path and file name of the file containing data discovery properties
                                 (see src/main/resources/datadiscovery.properties for an example)
-    <requirement_output_file>  - Optional name of sample requirement file to be created (-r must also be specified)
-
 
 Using 3rd-Party JDBC Drivers with Maven
 ------------------
