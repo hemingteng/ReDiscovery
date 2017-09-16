@@ -1,5 +1,5 @@
 /*
- * 
+ *
  * This is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation; either version 2.1 of
@@ -24,25 +24,29 @@ import java.nio.channels.FileLock;
 import java.nio.channels.OverlappingFileLockException;
 import org.apache.log4j.Logger;
 import static org.apache.log4j.Logger.getLogger;
+import java.util.Random;
+
+
 
 
 /**
- * Most of the code is copied from this page: http://www.rgagnon.com/javadetails/java-0288.html 
- * 
- * Modified by Armenak Grigoryan
+ * Most of the code is copied from this page: http://www.rgagnon.com/javadetails/java-0288.html
+ *
+ * Modified by Armenak Grigoryan and Redglue
  */
 public class ApplicationLock {
     private final String appName;
     private File file;
     private FileChannel channel;
     private FileLock lock;
-    
+
+
     private static final Logger log = getLogger(ApplicationLock.class);
 
     /**
      * Constructor
-     * 
-     * @param appName application name 
+     *
+     * @param appName application name
      */
     public ApplicationLock(final String appName) {
         this.appName = appName;
@@ -51,17 +55,19 @@ public class ApplicationLock {
     /**
      * Returns true if there is another instance of the application is running.
      * Otherwise returns false.
-     * 
+     *
      * @return boolean
      * @throws com.strider.datadefender.DataDefenderException
      */
     public boolean isAppActive() throws DataDefenderException {
         try {
+            Random rand = new Random();
+            int n = rand.nextInt(100) + 1;
             file = new File
-                 (System.getProperty("user.home"), appName + ".tmp");
+                 (System.getProperty("user.home"), appName + "_" + n + ".tmp");
             channel = new RandomAccessFile(file, "rw").getChannel();
             log.debug("Creating lock file " + file.getName());
-            
+
             try {
                 lock = channel.tryLock();
                 log.debug("Locking file ...");
@@ -98,21 +104,21 @@ public class ApplicationLock {
     }
 
     private void closeLock() throws DataDefenderException {
-        try { 
-            lock.release();  
-        } catch (IOException e) {  
+        try {
+            lock.release();
+        } catch (IOException e) {
             throw new DataDefenderException("Problem releasing file lock", e);
         }
-        
-        try { 
-            channel.close(); 
-        } catch (IOException e) {  
+
+        try {
+            channel.close();
+        } catch (IOException e) {
             throw new DataDefenderException("Problem closing channel", e);
         }
     }
 
     private void deleteFile() {
-        file.delete(); 
-    }    
-    
+        file.delete();
+    }
+
 }

@@ -25,8 +25,8 @@ import java.util.Properties;
 /**
  * Check for properties required for execution of data defender and data anonymizer
  * and stop the execution if not all required properties are defined
- * @author Armenak Grigoryan (original work and author)
- * @author Redglue (www.redglue.eu)
+ * @author Armenak Grigoryan
+ * @author Redglue
  */
 public class PropertyCheck {
 

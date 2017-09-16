@@ -1,5 +1,5 @@
 /*
- * 
+ *
  * Copyright 2014, Armenak Grigoryan, and individual contributors as indicated
  * by the @authors tag. See the copyright.txt in the distribution for a
  * full listing of individual contributors.
@@ -18,61 +18,81 @@
 
 package com.strider.datadefender.file.metadata;
 
+//import java.util.*;
 import java.util.Comparator;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.HashSet;
+import org.apache.commons.lang3.StringUtils;
+
+
 
 /**
  * Data object to hold all metadata for matching data in Discovery applications.
- * Currently this object holds column and table metadata; ie, duplicating info.  
+ * Currently this object holds column and table metadata; ie, duplicating info.
  * But since the numbers of tables/columns will always be
  * limited in size, don't really see an immediate need to refactor this.
  * @author Armenak Grigoryan
+ * @author REDGLUE
  */
 public class FileMatchMetaData {
     private final String directory;
     private final String fileName;
-    private double averageProbability;   
+    private double averageProbability;
     private String model = "";
+    private ArrayList<String> dictionariesFound = new ArrayList<String>();
 
     public FileMatchMetaData(final String directory, final String fileName) {
         this.directory = directory;
         this.fileName  = fileName;
-    }   
+    }
 
     public String getDirectory() {
         return this.directory;
     }
-    
+
     public String getFileName() {
         return this.fileName;
     }
-    
+
     public void setAverageProbability(final double averageProbability) {
         this.averageProbability = averageProbability;
     }
-    
+
     public double getAverageProbability() {
         return this.averageProbability;
     }
-    
+
     public String getModel() {
         return this.model;
     }
 
+    public String getDictionariesFound() {
+        //this.dictionariesFound = new ArrayList<String>();
+        ArrayList<String> dedup = new ArrayList (new HashSet<String>(this.dictionariesFound));
+        String dictionaries = String.join(";", dedup);
+
+        return dictionaries;
+    }
+
+    public void setDictionariesFound(final ArrayList<String> dictionariesFound) {
+        this.dictionariesFound = dictionariesFound;
+    }
+
     public void setModel(final String model) {
         this.model = model;
-    }        
-    
+    }
+
     @Override
     public String toString() {
         return this.directory + "." + this.fileName;
     }
-    
+
     /**
      * @return comparator used for sorting
      */
     public static Comparator<FileMatchMetaData> compare() {
             return Comparator.comparing(FileMatchMetaData::getDirectory)
-                              .thenComparing(FileMatchMetaData::getFileName);            
+                              .thenComparing(FileMatchMetaData::getFileName);
     }
 }
-

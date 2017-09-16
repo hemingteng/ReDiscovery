@@ -1,5 +1,5 @@
 /*
- * 
+ *
  * Copyright 2014, Armenak Grigoryan, and individual contributors as indicated
  * by the @authors tag. See the copyright.txt in the distribution for a
  * full listing of individual contributors.
@@ -41,18 +41,18 @@ import java.util.Locale;
 /**
  * @author Armenak Grigoryan
  */
-public class ColumnDiscoverer extends Discoverer { 
-    
+public class ColumnDiscoverer extends Discoverer {
+
     private static final Logger log = getLogger(ColumnDiscoverer.class);
 
-    public List<MatchMetaData> discover(final IDBFactory factory, final Properties columnProperties, final Set<String> tables) 
+    public List<MatchMetaData> discover(final IDBFactory factory, final Properties columnProperties, final Set<String> tables)
         throws DatabaseAnonymizerException {
-     
+
         log.info("Column discovery in process");
         final IMetaData metaData = factory.fetchMetaData();
         final List<MatchMetaData> map = metaData.getMetaData();
         List<MatchMetaData> uniqueMatches = null;
-        
+
         // Converting HashMap keys into ArrayList
         @SuppressWarnings({ "rawtypes", "unchecked" })
         final List<String> suspList = new ArrayList(columnProperties.keySet());
@@ -73,37 +73,37 @@ public class ColumnDiscoverer extends Discoverer {
                 }
             }
         }
-        
+
         log.info("Preparing report ...");
         // Report column names
-                
+
         if (matches != null && !matches.isEmpty()) {
             uniqueMatches = new ArrayList<>(new LinkedHashSet<>(matches));
-            
-            log.info("-----------------");        
+
+            log.info("-----------------");
             log.info("List of suspects:");
             log.info("-----------------");
             uniqueMatches.sort(MatchMetaData.compare());
             final Score score = new Score();
             for (final MatchMetaData entry: uniqueMatches) {
-                
+
                 // Row count
-                final int rowCount = ReportUtil.rowCount(factory, entry.getTableName());
-                
-                // Getting 5 sample values                
-                final List<String> sampleDataList = ReportUtil.sampleData(factory, entry.getTableName(), entry.getColumnName());
-                
+                //final int rowCount = ReportUtil.rowCount(factory, entry.getTableName());
+
+                // Getting 5 sample values
+                //final List<String> sampleDataList = ReportUtil.sampleData(factory, entry.getTableName(), entry.getColumnName());
+
                 // Output
                 log.info("Column                     : " + entry);
                 log.info( CommonUtils.fixedLengthString('=', entry.toString().length() + 30));
-                log.info("Number of rows in the table: " + rowCount);
-                log.info("Score                      : " + score.columnScore(rowCount) );                
-                log.info("Sample data");
-                log.info( CommonUtils.fixedLengthString('-', 11));
-                for (final String sampleData: sampleDataList) {
-                    log.info(sampleData);
-                }
-                log.info("" );               
+                //log.info("Number of rows in the table: " + rowCount);
+                //log.info("Score                      : " + score.columnScore(rowCount) );
+                //log.info("Sample data");
+                //log.info( CommonUtils.fixedLengthString('-', 11));
+                //for (final String sampleData: sampleDataList) {
+                //    log.info(sampleData);
+                //}
+                log.info("" );
             }
             log.info("Overall score: " + score.dataStoreScore());
         } else {

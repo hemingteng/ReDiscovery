@@ -13,18 +13,8 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
-
- * 2017 - Forked as redsense by Redglue to implement a different direction to the project
-  * Distributed as free software; you can redistribute it and/or modify it
-  * under the terms of the GNU Lesser General Public License as
-  * published by the Free Software Foundation;
+ *
  */
-
- /**
-  *
-  * @author Armenak Grigoryan
-  * @author Redglue
-  */
 
 package com.strider.datadefender;
 
@@ -35,6 +25,8 @@ import org.apache.commons.collections.ListUtils;
 import opennlp.tools.dictionary.Dictionary;
 import opennlp.tools.namefind.DictionaryNameFinder;
 import opennlp.tools.namefind.RegexNameFinder;
+import opennlp.tools.namefind.TokenNameFinderModel;
+import opennlp.tools.namefind.TokenNameFinder;
 import opennlp.tools.util.StringList;
 
 import java.sql.ResultSet;
@@ -46,9 +38,10 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Pattern;
-import java.io.InputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 
 import opennlp.tools.util.Span;
@@ -75,6 +68,8 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Vector;
+import java.util.Enumeration;
 import static com.strider.datadefender.utils.AppProperties.loadProperties;
 
 
@@ -104,22 +99,15 @@ public class DatabaseDiscoverer extends Discoverer {
 
         // Get list of models used in data discovery
         final String models = dataDiscoveryProperties.getProperty("models");
-        modelList = models.split(",");
-        log.info("ML Model list [" + Arrays.toString(modelList) + "]");
-
         List<MatchMetaData> finalList = new ArrayList<>();
-        for (final String model: modelList) {
-            log.info("Processing NER Model Type:" + NERModel);
+        log.info("Processing NER Model Type:" + NERModel);
 
-            //log.info("Processing ML Model " + model);
-            final Model modelPerson = createModel(dataDiscoveryProperties, model);
-            matches = discoverAgainstSingleModel(factory, dataDiscoveryProperties, tables, modelPerson, probabilityThreshold, NERModel);
-            finalList = ListUtils.union(finalList, matches);
-        }
+        final Model modelPerson = createModel(dataDiscoveryProperties, models);
+        matches = discoverAgainstSingleModel(factory, dataDiscoveryProperties, tables, modelPerson, probabilityThreshold, NERModel);
+        finalList = ListUtils.union(finalList, matches);
 
         final DecimalFormat decimalFormat = new DecimalFormat("#.##");
         log.info("List of suspects:");
-        //log.info(String.format("%20s %20s %20s %20s", "Table*", "Column*", "Probability*", "Model*"));
         final Score score = new Score();
         int highRiskColumns = 0;
         int rowCount=0;
@@ -138,6 +126,7 @@ public class DatabaseDiscoverer extends Discoverer {
 
             log.info("Probability                 : " + decimalFormat.format(data.getAverageProbability()));
             log.info("Model                       : " + data.getModel());
+            log.info("Dictionaries/Model          : " + data.getDictionariesFound());
             if (calculate_score.equals("yes")) {
             log.info("Number of rows in the table : " + rowCount);
             log.info("Score                       : " + score.columnScore(rowCount));
@@ -149,11 +138,9 @@ public class DatabaseDiscoverer extends Discoverer {
             log.info("Sample data");
             log.info( CommonUtils.fixedLengthString('-', 11));
 
-            //data.getProbabilityList().sort(Probability.compare());
 
             final List<Probability> probabilityList = data.getProbabilityList();
 
-//            probabilityList = new ArrayList<>(new LinkedHashSet<>(probabilityList));
             Collections.sort(probabilityList,
                 Comparator.comparingDouble(Probability::getProbabilityValue).reversed());
 
@@ -176,8 +163,13 @@ public class DatabaseDiscoverer extends Discoverer {
                 highRiskColumns++;
             }
           }
-            //final String result = String.format("%20s %20s %20s %20s", data.getTableName(), data.getColumnName(), probability, data.getModel());
-            //log.info(result);
+
+          log.info(String.format("Summary: %s,%s,%s,%s,%s,%s", "Schema", "Table", "Column", "Probability", "Model", "[Dictionary/Model]"));
+          final String result = String.format("Summary: %s,%s,%s,%s,%s,[%s]", data.getSchemaName(), data.getTableName(), data.getColumnName(), decimalFormat.format(data.getAverageProbability()), data.getModel(), data.getDictionariesFound());
+          log.info(result);
+          log.info("\n");
+
+
         }
         // Only applicable when parameter table_rowcount=yes otherwise score calculation should not be done
         if (calculate_score.equals("yes")) {
@@ -207,6 +199,27 @@ public class DatabaseDiscoverer extends Discoverer {
 
         return matches;
     }
+
+    private List<TokenNameFinder> getDictionariesFileForSearch(String[] dictionaryPathList, File nodeDict)
+      throws IOException
+    {
+      List<TokenNameFinder> findersDict = new ArrayList<>();
+    // add all dictionaries
+      for (final String dictPath: dictionaryPathList) {
+        nodeDict = new File(dictPath);
+        final InputStream Dictstream = new FileInputStream(dictPath);
+
+        log.info("Dictionary considered for analysis: " + dictPath);
+        Dictionary rawdict = new Dictionary(Dictstream);
+        //DictionaryNameFinder dictionaryNER = new DictionaryNameFinder(rawdict, nodeDict.getName().replaceFirst("[.][^.]+$", ""););
+
+        findersDict.add(new DictionaryNameFinder(rawdict, nodeDict.getName().replaceAll("\\.\\w+", "")));
+
+    }
+    return findersDict;
+  }
+
+
     private List<MatchMetaData> discoverAgainstSingleModel(final IDBFactory factory, final Properties dataDiscoveryProperties,
             final Set<String> tables, final Model model, final double probabilityThreshold, final String NERModel)
     throws AnonymizerException, ParseException, IOException, DataDefenderException {
@@ -218,7 +231,20 @@ public class DatabaseDiscoverer extends Discoverer {
         boolean specialCase = false;
 
         final String[] specialCaseFunctions = dataDiscoveryProperties.getProperty("extentions").split(",");
-        final String dictionaryPath = dataDiscoveryProperties.getProperty("dictionary_path");
+        //NERDictionary
+        String dictionaryPath = null;
+        File nodeDict = null;
+        String[] dictionaryPathList = null;
+        List<TokenNameFinder> findersDict = null;
+        ArrayList<String> DictionariesFound = null;
+
+        if (NERModel.equals("NERDictionary")) {
+        dictionaryPath = dataDiscoveryProperties.getProperty("dictionary_path");
+        dictionaryPathList = dictionaryPath.split(",");
+        findersDict = getDictionariesFileForSearch(dictionaryPathList, nodeDict);
+
+      }
+
 
         // possible values for this:
         // NEREntropy - Uses only NER MaxEntropy OpenNLP trained models
@@ -226,10 +252,10 @@ public class DatabaseDiscoverer extends Discoverer {
         // NERRegex - Uses only Regex OpenNLP models
         // NEREntropyDictionary - Uses MaxEntropy and compares to Dictionary - Returns only the ones present in the dictionary
 
-        final InputStream DictstreamDB = new FileInputStream(dictionaryPath);
+        //final InputStream DictstreamDB = new FileInputStream(dictionaryPath);
 
-        Dictionary rawdictDB = new Dictionary(DictstreamDB);
-        DictionaryNameFinder dictionaryNERDB = new DictionaryNameFinder(rawdictDB, "NERDB");
+        //Dictionary rawdictDB = new Dictionary(DictstreamDB);
+        //DictionaryNameFinder dictionaryNERDB = new DictionaryNameFinder(rawdictDB, "NERDB");
 
 
 
@@ -241,16 +267,19 @@ public class DatabaseDiscoverer extends Discoverer {
         List<Probability> probabilityList;
         List<Probability> probabilityListRegex;
         List<Probability> probabilityListDict;
-        double averageProbability = 0; // initization
+        double averageProbability; // initization
+
+        //findersDict = getDictionariesFileForSearch(dictionaryPathList, nodeDict);
 
         for(final MatchMetaData data: map) {
             final String tableName = data.getTableName();
             final String columnName = data.getColumnName();
             log.debug(data.getColumnType());
+             // start with 0 as new column is analyzed
             probabilityList = new ArrayList<>();
             probabilityListRegex = new ArrayList<>();
             probabilityListDict = new ArrayList<>();
-
+            averageProbability = 0;
             log.info("Analyzing table [" + tableName + "].["+ columnName+ "]");
 
             if (!tables.isEmpty() && !tables.contains(tableName.toLowerCase(Locale.ENGLISH))) {
@@ -320,21 +349,41 @@ public class DatabaseDiscoverer extends Discoverer {
 
                           case "NERRegex":
                             final Properties RegexProperties = loadProperties("regex.properties");
+
                             log.debug("Tokenizing for column is starting...");
                             log.debug("Content: " + processingValue);
 
                             final String tokensRegex[] = model.getTokenizer().tokenize(processingValue);
+
                             final List<String> suspList = new ArrayList(RegexProperties.keySet());
-
-
 
                             //matches = new ArrayList<>();
                             //Pattern[] patterns = new Pattern[];
                             log.debug("Applying REGEX model for sensitive data...");
-                            Pattern[] patterns = suspList.stream().map(Pattern::compile).toArray(Pattern[]::new);
+
+                            //Pattern[] patterns = suspList.stream().map(Pattern::compile).toArray(Pattern[]::new);
+                            Enumeration<?> enumeration = RegexProperties.propertyNames();
                             Map<String, Pattern[]> regexMap = new HashMap<>();
 
-                            regexMap.put("ALL_LANGS", patterns);
+                            while (enumeration.hasMoreElements()) {
+                              String key = (String) enumeration.nextElement();
+                              String value = RegexProperties.getProperty(key);
+                              Pattern ptregex = Pattern.compile(value);
+                              Pattern[] ptterns = new Pattern[]{ptregex};
+                              //Map<String, Pattern[]> regexMap = new HashMap<>();
+                              regexMap.put(key, ptterns);
+                              }
+
+                            //Pattern testEmail = Pattern.compile(regexEMAIL);
+
+                            //Map<String, Pattern[]> regexMap = new HashMap<>();
+
+                            //regexMap.put("ALL_LANGS", patterns);
+                            //regexMap.put('EMAIL', regexEMAIL)
+                            // test code - Luis Marques
+                            //Set settest=RegexProperties.keySet();
+                            //System.out.println("Set values: " + settest);
+
                             RegexNameFinder finder = new RegexNameFinder(regexMap);
 
                             Span[] resultRegex = finder.find(tokensRegex);
@@ -342,34 +391,59 @@ public class DatabaseDiscoverer extends Discoverer {
                             log.debug("Evaluating Regex results...");
                             final String RegexSpam = Arrays.toString(Span.spansToStrings(resultRegex, tokensRegex));
                             //log.info("Found Regex: " + RegexSpam);
-
+                            String getRegexType = "N/A";
                             for( int i = 0; i < resultRegex.length; i++) {
-
-                                  log.info("Found identifier text: " + tokensRegex[resultRegex[i].getStart()]);
+                                  getRegexType = resultRegex[i].getType();
+                                  log.debug("Found Type text: " + getRegexType);
+                                  log.debug("Found identifier text: " + tokensRegex[resultRegex[i].getStart()]);
                                   probabilityListRegex.add(new Probability(tokensRegex[resultRegex[i].getStart()], 0.99));
+                                  //averageProbability = calculateAverage(probabilityListRegex);
+                                  //data.setAverageProbability(0.99);
+                                  //data.setAverageProbability(averageProbabilityRegex);
                                   }
 
                             finder.clearAdaptiveData();
+                            data.setProbabilityList(probabilityListRegex);
                             averageProbability = calculateAverage(probabilityListRegex);
+                            //System.out.println("AVg prob:"+averageProbabilityRegex);
+                            data.setDictionariesFound(getRegexType);
+                            data.setAverageProbability(averageProbability);
                             break;
 
                           case "NERDictionary":
-
+                            data.setAverageProbability(0);
+                            //List<TokenNameFinder> findersDict = getDictionariesFileForSearch(dictionaryPathList, nodeDict);
+                            DictionariesFound = new ArrayList<String>();
+                            log.debug("Loading Dictionaries..Please wait");
+                            //findersDict = getDictionariesFileForSearch(dictionaryPathList, nodeDict);
                             log.debug("Dictionary considered for analysis: " + dictionaryPath);
                             log.debug("Tokenizing for column is starting...");
 
 
                             final String tokensDict[] = model.getTokenizer().tokenize(processingValue);
                             log.debug("Applying Dictionary model to column...");
-                            final Span DictSpansOnly[] = dictionaryNERDB.find(tokensDict);
+
+                            for (TokenNameFinder dictionaryNERDB : findersDict) {
+                              final Span DictSpansOnly[] = dictionaryNERDB.find(tokensDict);
                             for( int i = 0; i < DictSpansOnly.length; i++)
                             {
-                                // dictionary finding always represent 99% of being correct.
-                                log.info("Dictionary text is: " + tokensDict[DictSpansOnly[i].getStart()]);
-                                probabilityListDict.add(new Probability(tokensDict[DictSpansOnly[i].getStart()], 0.99));
+
+                              //DictionariesFound.add(DictSpansOnly[i].getType());
+                              data.setDictionariesFound(DictSpansOnly[i].getType());
+                              log.debug("Dictionary type is: " + DictSpansOnly[i].getType());
+                              // dictionary finding always represent 99% of being correct.
+                              log.debug("Dictionary text is: " + tokensDict[DictSpansOnly[i].getStart()]);
+
+                              probabilityListDict.add(new Probability(tokensDict[DictSpansOnly[i].getStart()], 0.99));
                             }
+
                           dictionaryNERDB.clearAdaptiveData();
+                          data.setProbabilityList(probabilityListDict);
                           averageProbability = calculateAverage(probabilityListDict);
+                          data.setAverageProbability(averageProbability);
+
+                        }
+
                           break;
                           // END OF DICTIONARY LOOKUP
 
@@ -391,43 +465,30 @@ public class DatabaseDiscoverer extends Discoverer {
                         // From OpenNLP documentation:
                         //  After every document clearAdaptiveData must be called to clear the adaptive data in the feature generators.
                         // Not calling clearAdaptiveData can lead to a sharp drop in the detection rate after a few documents.
+                        data.setProbabilityList(probabilityList);
                         averageProbability = calculateAverage(probabilityList);
                         model.getNameFinder().clearAdaptiveData();
+                        data.setDictionariesFound(model.getName());
+                        data.setAverageProbability(averageProbability);
                         break;
+
                     }
+
                   }
                 }
+
             } catch (SQLException sqle) {
                 log.error(sqle.toString());
             }
 
-
-            switch (NERModel) {
-
-            case "NERRegex":
-              data.setProbabilityList(probabilityListRegex);
-              break;
-            case "NERDictionary":
-              data.setProbabilityList(probabilityListDict);
-              break;
-            case "NEREntropy":
-              data.setProbabilityList(probabilityList);
-              break;
-            }
-
             if ((averageProbability >= probabilityThreshold)) {
-                data.setAverageProbability(averageProbability);
-                data.setModel(NERModel);
-                matches.add(data);
-                }
 
+              data.setModel(NERModel);
+              matches.add(data);
+              }
 
-            // Special processing
-            if (specialCase && specialCaseData != null) {
-                matches.add(specialCaseData);
-                specialCaseData = null;
-            }
         }
+
 
         return matches;
     }
