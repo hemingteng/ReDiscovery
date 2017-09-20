@@ -30,8 +30,8 @@ import java.util.Properties;
  */
 public class PropertyCheck {
 
-    private static final String[] fileDiscoveryProperties = {"probability_threshold", "english_tokens", "english_sentenses", "names", "models", "directories", "dictionary_path", "files_excluded", "NERmodel"};
-    private static final String[] dataDiscoveryProperties = {"probability_threshold", "english_tokens", "names", "models", "score_calculation", "dictionary_path", "NERmodel"};
+    private static final String[] fileDiscoveryProperties = {"probability_threshold", "tokens", "models", "directories", "dictionary_path", "files_excluded", "NERmodel"};
+    private static final String[] dataDiscoveryProperties = {"probability_threshold", "tokens", "models", "score_calculation", "dictionary_path", "NERmodel"};
     private static final String[] databaseProperties = {"vendor", "driver", "username", "password", "url"};
     private static final String[] dataAnonymizerProperties = {"requirement", "batch_size"};
 

@@ -50,7 +50,7 @@ import org.xml.sax.SAXException;
  *
  * This class will parse and analyze the parameters and execute appropriate
  * service.
- *
+ * @author Redglue
  */
 public class DataDefender  {
 
@@ -62,7 +62,7 @@ public class DataDefender  {
         final long startTime = System.currentTimeMillis();
 
         // Ensure we are not trying to run second instance of the same program
-        final ApplicationLock al = new ApplicationLock("DataDefender");
+        final ApplicationLock al = new ApplicationLock("redatasense");
 
         if (al.isAppActive()) {
             log.error("Another instance of this program is already active");
@@ -112,28 +112,6 @@ public class DataDefender  {
         final Properties props = loadProperties(line.getOptionValue('P', "db.properties"));
         try (final IDBFactory dbFactory = IDBFactory.get(props);) {
             switch (cmd) {
-                case "anonymize":
-                    errors = PropertyCheck.check(cmd, ' ');
-                    if (errors.size() >0) {
-                        displayErrors(errors);
-                        return;
-                    }
-                    final String anonymizerPropertyFile = line.getOptionValue('A', "anonymizer.properties");
-                    final Properties anonymizerProperties = loadProperties(anonymizerPropertyFile);
-                    final IAnonymizer anonymizer = new DatabaseAnonymizer();
-                    anonymizer.anonymize(dbFactory, anonymizerProperties, getTableNames(unparsedArgs, anonymizerProperties));
-                    break;
-                case "generate":
-                    errors = PropertyCheck.check(cmd, ' ');
-                    if (errors.size() >0) {
-                        displayErrors(errors);
-                        return;
-                    }
-                    final IGenerator generator = new DataGenerator();
-                    final String generatorPropertyFile = line.getOptionValue('A', "anonymizer.properties");
-                    final Properties generatorProperties = loadProperties(generatorPropertyFile);
-                    generator.generate(dbFactory, generatorProperties);
-                    break;
                 case "database-discovery":
                     if (line.hasOption('c')) {
                         errors = PropertyCheck.check(cmd, 'c');
@@ -172,7 +150,7 @@ public class DataDefender  {
 
         final NumberFormat formatter = new DecimalFormat("#0.00000");
         log.info("Execution time is " + formatter.format((endTime - startTime) / 1000d) + " seconds");
-        log.info("DataDefender completed ");
+        log.info("Redatasense completed ");
     }
 
     /**
@@ -201,13 +179,10 @@ public class DataDefender  {
     private static Options createOptions() {
         final Options options = new Options();
         options.addOption("h", "help", false, "display help");
-        options.addOption("A", "anonymizer-properties", true, "define anonymizer property file");
         options.addOption("c", "columns", false, "discover candidate column names for anonymization based on provided patterns");
         options.addOption("C", "column-properties", true, "define column property file");
         options.addOption("d", "data", false, "discover candidate column for anonymization based on semantic algorithms");
         options.addOption("D", "data-properties", true, "discover candidate column for anonymization based on semantic algorithms");
-        options.addOption("r", "requirement", false, "create discover and create requirement file");
-        options.addOption("R", "requirement-file", false, "define requirement file name");
         options.addOption("P", "database properties", true, "define database property file");
         options.addOption("F", "file discovery properties", true, "define file discovery property file");
         options.addOption("debug", false, "enable debug output");
@@ -221,7 +196,7 @@ public class DataDefender  {
      */
     private static void help(final Options options) {
         final HelpFormatter formatter = new HelpFormatter();
-        formatter.printHelp("DataAnonymizer anonymize|database-discovery|file-discovery|generate [options] [table1 [table2 [...]]]", options);
+        formatter.printHelp("Redatasense database-discovery|file-discovery [options] [table1 [table2 [...]]]", options);
     }
 
     /**

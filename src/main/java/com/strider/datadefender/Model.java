@@ -1,5 +1,5 @@
 /*
- * 
+ *
  * Copyright 2014-2015, Armenak Grigoryan, and individual contributors as indicated
  * by the @authors tag. See the copyright.txt in the distribution for a
  * full listing of individual contributors.
@@ -24,23 +24,23 @@ public class Model {
     final private Tokenizer tokenizer;
     final private NameFinderME nameFinder;
     final private String name;
-    
+
     public Model(final Tokenizer tokenizer, final NameFinderME nameFinder, final String name) {
         this.name       = name;
         this.tokenizer  = tokenizer;
         this.nameFinder = nameFinder;
     }
-    
+
     public Tokenizer getTokenizer() {
         return this.tokenizer;
     }
-    
+
     public NameFinderME getNameFinder() {
         return this.nameFinder;
     }
-    
+
     public String getName() {
         return this.name;
-    }    
-  
+    }
+
 }

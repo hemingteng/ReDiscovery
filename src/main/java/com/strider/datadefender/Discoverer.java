@@ -1,5 +1,5 @@
 /*
- * 
+ *
  * Copyright 2014, Armenak Grigoryan, and individual contributors as indicated
  * by the @authors tag. See the copyright.txt in the distribution for a
  * full listing of individual contributors.
@@ -43,9 +43,9 @@ import static org.apache.log4j.Logger.getLogger;
  * @author Akira Matsuo
  */
 public abstract class Discoverer { //implements IDiscoverer {
-    
+
     protected List<MatchMetaData> matches;
-    
+
     private static final Logger log = getLogger(Discoverer.class);
 
     public void createRequirement(final String fileName) throws AnonymizerException {
@@ -54,7 +54,7 @@ public abstract class Discoverer { //implements IDiscoverer {
         }
         RequirementUtils.write(RequirementUtils.create(matches), fileName);
     }
-    
+
     public double calculateAverage(final List <Probability> values) {
         Double sum = 0.0;
         if(!values.isEmpty()) {
@@ -64,39 +64,39 @@ public abstract class Discoverer { //implements IDiscoverer {
             return sum / values.size();
         }
         return sum;
-    }    
-    
+    }
+
     /**
      * Creates model POJO based on OpenNLP model
-     * 
+     *
      * @param dataDiscoveryProperties
      * @param modelName
      * @return Model
      */
     public  Model createModel(final Properties dataDiscoveryProperties, final String modelName) {
         InputStream modelInToken = null;
-        InputStream modelIn = null;        
+        InputStream modelIn = null;
         TokenizerModel modelToken;
         Tokenizer tokenizer = null;
-        
+
         TokenNameFinderModel model = null;
         NameFinderME nameFinder = null;
-        
+
         try {
             log.debug("Model name: " + modelName);
-            
+
             log.debug(dataDiscoveryProperties.toString());
-            modelInToken = new FileInputStream(dataDiscoveryProperties.getProperty("english_tokens"));
-            
+            modelInToken = new FileInputStream(dataDiscoveryProperties.getProperty("tokens"));
+
             log.debug(dataDiscoveryProperties.getProperty(modelName));
-            modelIn = new FileInputStream(dataDiscoveryProperties.getProperty(modelName));            
-            
+            modelIn = new FileInputStream(dataDiscoveryProperties.getProperty(modelName));
+
             modelToken = new TokenizerModel(modelInToken);
-            tokenizer = new TokenizerME(modelToken);            
-            
+            tokenizer = new TokenizerME(modelToken);
+
             model = new TokenNameFinderModel(modelIn);
-            nameFinder = new NameFinderME(model);    
-            
+            nameFinder = new NameFinderME(model);
+
             modelInToken.close();
             modelIn.close();
         } catch (FileNotFoundException ex) {
@@ -114,7 +114,7 @@ public abstract class Discoverer { //implements IDiscoverer {
         } catch (IOException ex) {
             log.error(ex.toString());
         }
-        
+
         return new Model(tokenizer, nameFinder, modelName);
-    }    
+    }
 }
