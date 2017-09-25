@@ -268,6 +268,7 @@ public class DatabaseDiscoverer extends Discoverer {
         List<Probability> probabilityListRegex;
         List<Probability> probabilityListDict;
         double averageProbability; // initization
+        String getRegexType = "N/A";
 
         //findersDict = getDictionariesFileForSearch(dictionaryPathList, nodeDict);
 
@@ -378,11 +379,6 @@ public class DatabaseDiscoverer extends Discoverer {
 
                             //Map<String, Pattern[]> regexMap = new HashMap<>();
 
-                            //regexMap.put("ALL_LANGS", patterns);
-                            //regexMap.put('EMAIL', regexEMAIL)
-                            // test code - Luis Marques
-                            //Set settest=RegexProperties.keySet();
-                            //System.out.println("Set values: " + settest);
 
                             RegexNameFinder finder = new RegexNameFinder(regexMap);
 
@@ -391,7 +387,7 @@ public class DatabaseDiscoverer extends Discoverer {
                             log.debug("Evaluating Regex results...");
                             final String RegexSpam = Arrays.toString(Span.spansToStrings(resultRegex, tokensRegex));
                             //log.info("Found Regex: " + RegexSpam);
-                            String getRegexType = "N/A";
+                            //String getRegexType = "N/A";
                             for( int i = 0; i < resultRegex.length; i++) {
                                   getRegexType = resultRegex[i].getType();
                                   log.debug("Found Type text: " + getRegexType);
@@ -405,7 +401,6 @@ public class DatabaseDiscoverer extends Discoverer {
                             finder.clearAdaptiveData();
                             data.setProbabilityList(probabilityListRegex);
                             averageProbability = calculateAverage(probabilityListRegex);
-                            //System.out.println("AVg prob:"+averageProbabilityRegex);
                             data.setDictionariesFound(getRegexType);
                             data.setAverageProbability(averageProbability);
                             break;
