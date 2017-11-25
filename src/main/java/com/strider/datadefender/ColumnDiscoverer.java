@@ -32,7 +32,6 @@ import com.strider.datadefender.database.DatabaseAnonymizerException;
 import com.strider.datadefender.database.IDBFactory;
 import com.strider.datadefender.database.metadata.IMetaData;
 import com.strider.datadefender.database.metadata.MatchMetaData;
-import com.strider.datadefender.report.ReportUtil;
 import com.strider.datadefender.utils.CommonUtils;
 import com.strider.datadefender.utils.Score;
 import java.util.LinkedHashSet;

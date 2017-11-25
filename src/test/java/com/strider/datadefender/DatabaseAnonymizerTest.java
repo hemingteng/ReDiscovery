@@ -51,7 +51,7 @@ public class DatabaseAnonymizerTest extends H2DB {
     }
     // Note: if this test fails w/ NoSuchMethodException and running in an IDE ensure that the -parameter is passed to compiler
     //       in eclipse it's under java compiler->classfile generation->store information about parameters
-    @Test
+    /* @Test
     public void testHappyPath() throws AnonymizerException, SQLException { 
         consumeQuery(this::assertInitialData);
         
@@ -65,5 +65,6 @@ public class DatabaseAnonymizerTest extends H2DB {
                 assertTrue(actual, actual.matches(".*(h2db|oracle|mysql).*"));
             });
         });
+        */
     }
-}
+

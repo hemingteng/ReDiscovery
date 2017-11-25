@@ -21,6 +21,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -47,7 +48,7 @@ public class ColumnDiscoverTest extends H2DB {
     private final Properties badCProps = new Properties() {{ setProperty("la colonna non esiste", "true" ); }};
 
     @Test
-    public void testWithColumns() throws AnonymizerException { 
+    public void testWithColumns() throws AnonymizerException, IOException { 
         final ColumnDiscoverer discoverer = new ColumnDiscoverer();
         final List<MatchMetaData> suspects = discoverer.discover(factory, sampleCProps, new HashSet<String>());
         assertEquals(1, suspects.size());
@@ -56,7 +57,7 @@ public class ColumnDiscoverTest extends H2DB {
     }
 
     @Test
-    public void testWithTablesColumnsAndRequirements() throws AnonymizerException { 
+    public void testWithTablesColumnsAndRequirements() throws AnonymizerException, IOException { 
         final ColumnDiscoverer discoverer = new ColumnDiscoverer();
         final List<MatchMetaData> suspects = discoverer.discover(factory, sampleCProps, 
             new HashSet<String>(Arrays.asList("ju_users")));

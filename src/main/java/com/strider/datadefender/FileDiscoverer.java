@@ -30,6 +30,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.FileWriter;
 import org.apache.commons.io.FileUtils;
 
 
@@ -44,35 +45,28 @@ import org.xml.sax.SAXException;
 import opennlp.tools.util.Span;
 
 import com.strider.datadefender.file.metadata.FileMatchMetaData;
-import com.strider.datadefender.utils.CommonUtils;
 import java.util.Collections;
 import opennlp.tools.dictionary.Dictionary;
 import opennlp.tools.namefind.DictionaryNameFinder;
 import opennlp.tools.namefind.RegexNameFinder;
-import opennlp.tools.namefind.TokenNameFinderModel;
 import opennlp.tools.namefind.TokenNameFinder;
 
-import opennlp.tools.util.StringList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
-import java.util.Properties;
-import java.util.LinkedHashSet;
-import java.util.Vector;
 import java.util.Enumeration;
 import java.util.Date;
-import opennlp.tools.tokenize.SimpleTokenizer;
 import static com.strider.datadefender.utils.AppProperties.loadProperties;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
-import java.io.FileWriter;
-import java.io.IOException;
+
 
 
 /**
  *
  * @author Armenak Grigoryan
+ * 
  */
 public class FileDiscoverer extends Discoverer {
 
@@ -84,22 +78,20 @@ public class FileDiscoverer extends Discoverer {
     @SuppressWarnings("unchecked")
     public List<FileMatchMetaData> discover(final Properties dataDiscoveryProperties)
     throws AnonymizerException, IOException, SAXException, TikaException, NullPointerException, Exception {
-        log.warn("Data discovery in process");
+        log.info("Data discovery in process");
 
         // Get the probability threshold from property file
         final double probabilityThreshold = parseDouble(dataDiscoveryProperties.getProperty("probability_threshold"));
-        log.warn("Probability threshold [" + probabilityThreshold + "]");
+        log.info("Probability threshold [" + probabilityThreshold + "]");
 
         // Get list of models used in data discovery
         final String models = dataDiscoveryProperties.getProperty("models");
         modelList = models.split(",");
-        log.warn("Model list [" + Arrays.toString(modelList) + "]");
+        log.info("Model list [" + Arrays.toString(modelList) + "]");
 
         List<FileMatchMetaData> finalList = new ArrayList<>();
         for (String model: modelList) {
-            log.warn("********************************");
-            log.warn("Processing model " + model);
-            log.warn("********************************");
+            log.info("Processing model " + model);
             final Model modelPerson = createModel(dataDiscoveryProperties, model);
             fileMatches = discoverAgainstSingleModel(dataDiscoveryProperties, modelPerson, probabilityThreshold);
             finalList = ListUtils.union(finalList, fileMatches);
@@ -115,7 +107,7 @@ public class FileDiscoverer extends Discoverer {
         obj.put("File Discovery", filediscovery);
 
         final DecimalFormat decimalFormat = new DecimalFormat("#.##");
-        log.warn("List of suspects:");
+        log.info("List of suspects:");
         log.info(String.format("%s,%s,%s,%s,%s", "Directory", "Filename", "Probability", "Model", "[Dictionaries]"));
         for(final FileMatchMetaData data: finalList) {
             final String probability = decimalFormat.format(data.getAverageProbability());
@@ -146,10 +138,8 @@ public class FileDiscoverer extends Discoverer {
         nodeDict = new File(dictPath);
         final InputStream Dictstream = new FileInputStream(dictPath);
 
-        log.warn("Dictionary considered for analysis: " + dictPath);
+        log.info("Dictionary considered for analysis: " + dictPath);
         Dictionary rawdict = new Dictionary(Dictstream);
-        //DictionaryNameFinder dictionaryNER = new DictionaryNameFinder(rawdict, nodeDict.getName().replaceFirst("[.][^.]+$", ""););
-
         findersDict.add(new DictionaryNameFinder(rawdict, nodeDict.getName().replaceAll("\\.\\w+", "")));
 
 
@@ -201,33 +191,11 @@ public class FileDiscoverer extends Discoverer {
         double averageProbability = 0;
 
 
-
-
-      //final InputStream Dictstream = new FileInputStream(dictionaryPath);
-      //log.warn("Dictionary considered for analysis: " + dictionaryPath);
-
-      //Dictionary rawdict = new Dictionary(Dictstream);
-      //log.warn("Loading dictionaries...");
-
-    //  List<TokenNameFinder> findersDict = new ArrayList<>();
-    // add all dictionaries
-    //  for (final String dictPath: dictionaryPathList) {
-  //      nodeDict = new File(dictPath);
-  //      final InputStream Dictstream = new FileInputStream(dictPath);
-
-    //    log.warn("Dictionary considered for analysis: " + dictPath);
-    //    Dictionary rawdict = new Dictionary(Dictstream);
-        //DictionaryNameFinder dictionaryNER = new DictionaryNameFinder(rawdict, nodeDict.getName().replaceFirst("[.][^.]+$", ""););
-
-    //    findersDict.add(new DictionaryNameFinder(rawdict, nodeDict.getName().replaceAll("\\.\\w+", "")));
-
-    //  }
-
-        log.warn("File types considered for analysis: " + inclusions);
-        log.warn("Directories for analysis: " + directories);
+        log.info("File types considered for analysis: " + inclusions);
+        log.info("Directories for analysis: " + directories);
 
         for (final String directory: directoryList) {
-            log.warn("Listing files. Please wait...");
+            log.info("Listing files. Please wait...");
             node = new File(directory);
             final List<File> files = (List<File>) FileUtils.listFiles(node, inclusionList, true);
 
@@ -236,11 +204,11 @@ public class FileDiscoverer extends Discoverer {
                   final String recursivedir = fich.getParent().toString();
 
                     if (Arrays.asList(files_excludedList).contains(file)) {
-                        log.warn("Ignoring [" + fich.getCanonicalPath() + "]");
+                        log.info("Ignoring [" + fich.getCanonicalPath() + "]");
                         continue;
                       }
 
-                      log.warn("Analyzing [" + fich.getCanonicalPath() + "]");
+                      log.info("Analyzing [" + fich.getCanonicalPath() + "]");
 
                     final BodyContentHandler handler = new BodyContentHandler(-1);
 
@@ -256,10 +224,10 @@ public class FileDiscoverer extends Discoverer {
                         }
                     }
                     catch (IOException e) {
-                      log.warn("Unable to read " + fich.getCanonicalPath() +".Ignoring...");
+                      log.info("Unable to read " + fich.getCanonicalPath() +".Ignoring...");
                       }
                     catch (Throwable npe) {
-                        log.warn("File error or not supported " + fich.getCanonicalPath() +".Ignoring...");
+                        log.info("File error or not supported " + fich.getCanonicalPath() +".Ignoring...");
                         continue;
                         }
 
@@ -270,14 +238,14 @@ public class FileDiscoverer extends Discoverer {
 
                       case "NERDictionary":
                         DictionariesFound = new ArrayList<String>();
-                        log.warn("Loading Dictionaries..Please wait");
+                        log.info("Loading Dictionaries..Please wait");
                         findersDict = getDictionariesFileForSearch(dictionaryPathList, nodeDict);
 
                         log.debug("Content: " + handlerString);
                         probabilityListDict = new ArrayList<>();
                         final String tokensDict[] = model.getTokenizer().tokenize(handler.toString());
 
-                        log.warn("Applying Dictionary model...");
+                        log.info("Applying Dictionary model...");
                         //final Span DictSpansOnly[] = dictionaryNER.find(tokensDict);
                         for (TokenNameFinder dictionaryNER : findersDict) {
                           final Span DictSpansOnly[] = dictionaryNER.find(tokensDict);
@@ -309,12 +277,12 @@ public class FileDiscoverer extends Discoverer {
 
                     //display names
                     probabilityList = new ArrayList<>();
-                    final String nameSpansString = Arrays.toString(Span.spansToStrings(nameSpans, tokens));
+                    //final String nameSpansString = Arrays.toString(Span.spansToStrings(nameSpans, tokens));
 
-                    log.warn("Comparing results...");
+                    log.info("Comparing results...");
                     for( int i = 0; i < nameSpans.length; i++) {
 
-                          log.warn("Probability is: "+spanProbs[i] +" for text: " + tokens[nameSpans[i].getStart()]);
+                          log.info("Probability is: "+spanProbs[i] +" for text: " + tokens[nameSpans[i].getStart()]);
                           probabilityList.add(new Probability(tokens[nameSpans[i].getStart()], spanProbs[i]));
 
                     }
@@ -328,14 +296,14 @@ public class FileDiscoverer extends Discoverer {
                     case "NERRegex":
                       DictionariesFound = new ArrayList<String>();
                       final Properties RegexProperties = loadProperties("regex.properties");
-                      log.warn("Tokenizing for file is starting...");
+                      log.info("Tokenizing for file is starting...");
                       log.debug("Content: " + handlerString);
                       probabilityListRegex = new ArrayList<>();
                       final String tokensRegex[] = model.getTokenizer().tokenize(handler.toString());
                       //final List<String> suspList = new ArrayList(RegexProperties.keySet());
                       //matches = new ArrayList<>();
                       //Pattern[] patterns = new Pattern[];
-                      log.warn("Applying REGEX model for sensitive data...");
+                      log.info("Applying REGEX model for sensitive data...");
                       //Pattern[] patterns = suspList.stream().map(Pattern::compile).toArray(Pattern[]::new);
                       Enumeration<?> enumeration = RegexProperties.propertyNames();
                       Map<String, Pattern[]> regexMap = new HashMap<>();
@@ -352,23 +320,22 @@ public class FileDiscoverer extends Discoverer {
                       RegexNameFinder finder = new RegexNameFinder(regexMap);
                       Span[] resultRegex = finder.find(tokensRegex);
 
-                      log.warn("Evaluating Regex results...");
-                      final String RegexSpam = Arrays.toString(Span.spansToStrings(resultRegex, tokensRegex));
+                      log.info("Evaluating Regex results...");
+                      //final String RegexSpam = Arrays.toString(Span.spansToStrings(resultRegex, tokensRegex));
                       String getRegexType = "N/A";
                       for( int i = 0; i < resultRegex.length; i++) {
                             getRegexType = resultRegex[i].getType();
-                            log.warn("Found Type text: " + getRegexType);
+                            log.info("Found Type text: " + getRegexType);
                             DictionariesFound.add(getRegexType);
                             // default regex probability is 99% always
-                            //log.warn("Regex for text: " + tokensRegex[resultRegex[i].getStart()]);
+                            //log.info("Regex for text: " + tokensRegex[resultRegex[i].getStart()]);
                             log.debug("Found identifier text: " + tokensRegex[resultRegex[i].getStart()]);
                             probabilityListRegex.add(new Probability(tokensRegex[resultRegex[i].getStart()], 0.99));
                             }
 
                       finder.clearAdaptiveData();
                       averageProbability = calculateAverage(probabilityListRegex);
-                      //result.setAverageProbability(averageProbability);
-                      //result.setDictionariesFound(DictionariesFoundRegex);
+
                       break;
 
                   }
@@ -376,7 +343,6 @@ public class FileDiscoverer extends Discoverer {
 
 
                     if ((averageProbability >= probabilityThreshold)) {
-                        //final FileMatchMetaData result = new FileMatchMetaData(recursivedir, file);
                         result.setAverageProbability(averageProbability);
                         result.setModel(model.getName());
                         result.setDictionariesFound(DictionariesFound);
@@ -385,7 +351,7 @@ public class FileDiscoverer extends Discoverer {
                   }
                   catch (NullPointerException npe) {
                       npe.printStackTrace(System.out);
-                      log.warn("NameFinder Model can't be applied to " + fich.getCanonicalPath() +".Ignoring...");
+                      log.info("NameFinder Model can't be applied to " + fich.getCanonicalPath() +".Ignoring...");
                       }
 
                 }
