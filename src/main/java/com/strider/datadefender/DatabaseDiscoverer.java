@@ -71,7 +71,12 @@ import java.util.Map;
 import java.util.Vector;
 import java.util.Enumeration;
 import static com.strider.datadefender.utils.AppProperties.loadProperties;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.Date;
 
 
 /**
@@ -94,6 +99,16 @@ public class DatabaseDiscoverer extends Discoverer {
         final double probabilityThreshold = parseDouble(dataDiscoveryProperties.getProperty("probability_threshold"));
         final String calculate_score = dataDiscoveryProperties.getProperty("score_calculation");
         final String NERModel = dataDiscoveryProperties.getProperty("NERmodel");
+        JSONObject obj = new JSONObject();
+        obj.put("Name", "Redatasense");
+        obj.put("Author", "Redglue");
+        obj.put("Date", new Date().toString());
+
+
+        
+        JSONArray columnJson = null;
+        
+        ArrayList<String> listSampleData = new ArrayList<String>();
 
         log.info("Probability threshold [" + probabilityThreshold + "]");
 
@@ -111,8 +126,13 @@ public class DatabaseDiscoverer extends Discoverer {
         final Score score = new Score();
         int highRiskColumns = 0;
         int rowCount=0;
+
         for(final MatchMetaData data: finalList) {
+            // empty arraylist 
+            listSampleData.clear();
+            columnJson = new JSONArray();
             // Row count
+
             if (calculate_score.equals("yes")) {
               log.debug("Skipping table rowcount...");
               rowCount = ReportUtil.rowCount(factory, data.getTableName());
@@ -122,15 +142,28 @@ public class DatabaseDiscoverer extends Discoverer {
 
             // Output
             log.info("Column                      : " + data.toString());
+            obj.put(data.toString(), columnJson);
             log.info( CommonUtils.fixedLengthString('=', data.toString().length() + 30));
-
+            // Prob
             log.info("Probability                 : " + decimalFormat.format(data.getAverageProbability()));
+            columnJson.add("Probability: "+ decimalFormat.format(data.getAverageProbability()));
+            // Model
             log.info("Model                       : " + data.getModel());
+            columnJson.add("Model: "+ data.getModel());
+            // Dictionaries
             log.info("Dictionaries/Model          : " + data.getDictionariesFound());
+            columnJson.add("Classification: "+ data.getDictionariesFound());
+            
             if (calculate_score.equals("yes")) {
+            // row count
             log.info("Number of rows in the table : " + rowCount);
+            columnJson.add("Rows: "+ rowCount);
+            // Score
             log.info("Score                       : " + score.columnScore(rowCount));
+            columnJson.add("Score: "+ score.columnScore(rowCount));
             } else {
+                columnJson.add("Rows: N/A");
+                columnJson.add("Score: N/A");
             log.info("Number of rows in the table : N/A");
             log.info("Score                       : N/A");
             }
@@ -138,6 +171,7 @@ public class DatabaseDiscoverer extends Discoverer {
             log.info("Sample data");
             log.info( CommonUtils.fixedLengthString('-', 11));
 
+            
 
             final List<Probability> probabilityList = data.getProbabilityList();
 
@@ -154,7 +188,10 @@ public class DatabaseDiscoverer extends Discoverer {
             for (int i=0; i<y; i++) {
                 final Probability p = data.getProbabilityList().get(i);
                 log.info(p.getSentence() + ":" + p.getProbabilityValue());
+                listSampleData.add(p.getSentence());
             }
+
+            columnJson.add("Sample Data:" + listSampleData);
 
             log.info("" );
             // Score calculation is evaluated with calculate_score parameter
@@ -197,6 +234,11 @@ public class DatabaseDiscoverer extends Discoverer {
       log.info("Overall score: N/A");
       }
 
+
+      try (FileWriter file = new FileWriter("DataDiscoveryResult.json")) {
+        file.write(obj.toJSONString());
+        
+      }
         return matches;
     }
 

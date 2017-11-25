@@ -37,16 +37,23 @@ import com.strider.datadefender.utils.CommonUtils;
 import com.strider.datadefender.utils.Score;
 import java.util.LinkedHashSet;
 import java.util.Locale;
+import java.util.Date;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+
+import java.io.FileWriter;
+import java.io.IOException;
 
 /**
- * @author Armenak Grigoryan
+ * @author Armenak Grigoryan (original work)
+ * @author Redglue 
  */
 public class ColumnDiscoverer extends Discoverer {
 
     private static final Logger log = getLogger(ColumnDiscoverer.class);
 
     public List<MatchMetaData> discover(final IDBFactory factory, final Properties columnProperties, final Set<String> tables)
-        throws DatabaseAnonymizerException {
+        throws DatabaseAnonymizerException, IOException {
 
         log.info("Column discovery in process");
         final IMetaData metaData = factory.fetchMetaData();
@@ -73,6 +80,13 @@ public class ColumnDiscoverer extends Discoverer {
                 }
             }
         }
+        // JSON write
+        JSONObject obj = new JSONObject();
+        obj.put("Name", "Redatasense");
+        obj.put("Author", "Redglue");
+        obj.put("Date", new Date().toString());
+        JSONArray columndiscovery = new JSONArray();
+        obj.put("Column Discovery", columndiscovery);
 
         log.info("Preparing report ...");
         // Report column names
@@ -87,28 +101,23 @@ public class ColumnDiscoverer extends Discoverer {
             final Score score = new Score();
             for (final MatchMetaData entry: uniqueMatches) {
 
-                // Row count
-                //final int rowCount = ReportUtil.rowCount(factory, entry.getTableName());
-
-                // Getting 5 sample values
-                //final List<String> sampleDataList = ReportUtil.sampleData(factory, entry.getTableName(), entry.getColumnName());
-
                 // Output
                 log.info("Column                     : " + entry);
                 log.info( CommonUtils.fixedLengthString('=', entry.toString().length() + 30));
-                //log.info("Number of rows in the table: " + rowCount);
-                //log.info("Score                      : " + score.columnScore(rowCount) );
-                //log.info("Sample data");
-                //log.info( CommonUtils.fixedLengthString('-', 11));
-                //for (final String sampleData: sampleDataList) {
-                //    log.info(sampleData);
-                //}
+
+                columndiscovery.add("Column: "+ entry);
+            
                 log.info("" );
             }
+
             log.info("Overall score: " + score.dataStoreScore());
         } else {
             log.info("No suspects have been found. Please refine your criteria.");
         }
+
+        try (FileWriter file = new FileWriter("ColumnDiscoveryResult.json")) {
+            file.write(obj.toJSONString());
+          }
         return uniqueMatches;
     }
 }
