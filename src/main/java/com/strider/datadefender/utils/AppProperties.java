@@ -29,6 +29,16 @@ import java.util.Properties;
 
 import com.strider.datadefender.DataDefenderException;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.PreparedStatement;
+
+
+import com.strider.datadefender.database.BackendDBConnection;
+import com.strider.datadefender.database.DBConnection;
+
 /**
  *
  * @author Armenak Grigoryan
@@ -78,4 +88,32 @@ public final class AppProperties {
             throw new DataDefenderException("ERROR: Unable to load " + fileName, e);
         }
     }
+
+    public static Properties loadPropertiesFromDB(String PropertiesTablename) throws DataDefenderException {
+        BackendDBConnection backendDB = new BackendDBConnection();
+        Connection dbc = backendDB.connect();
+        final Properties properties = new Properties();
+        
+
+        ResultSet rs = null;
+        try {
+        String SelectTableSQL = "SELECT RKEY,RVALUE FROM REDATASENSE."+ PropertiesTablename;
+
+        dbc.setAutoCommit(false);
+        PreparedStatement preparedStatement = dbc.prepareStatement(SelectTableSQL);    
+        rs = preparedStatement.executeQuery(SelectTableSQL);
+        
+        while(rs.next()) {
+            // first column is the key , second is the value itself
+            properties.put(rs.getString(1), rs.getString(2));
+            }
+        dbc.close();
+        return properties;
+        } 
+        catch (SQLException e) {
+            throw new DataDefenderException("ERROR: Unable to load properties from Database", e);
+        }
+    }
+
+
 }

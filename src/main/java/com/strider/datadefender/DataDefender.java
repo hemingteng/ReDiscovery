@@ -18,6 +18,7 @@
 package com.strider.datadefender;
 
 import com.strider.datadefender.database.IDBFactory;
+import static com.strider.datadefender.utils.AppProperties.loadPropertiesFromDB;
 import static com.strider.datadefender.utils.AppProperties.loadProperties;
 import com.strider.datadefender.utils.ApplicationLock;
 import java.io.IOException;
@@ -97,8 +98,10 @@ public class DataDefender  {
                 displayErrors(errors);
                 return;
             }
-            final String fileDiscoveryPropertyFile = line.getOptionValue('F', "filediscovery.properties");
-            final Properties fileDiscoveryProperties = loadProperties(fileDiscoveryPropertyFile);
+            //final String fileDiscoveryPropertyFile = line.getOptionValue('F', "filediscovery.properties");
+            //final Properties fileDiscoveryProperties = loadProperties(fileDiscoveryPropertyFile);
+            //load Properties from database instead
+            final Properties fileDiscoveryProperties = loadPropertiesFromDB("FILE_PROPERTIES");
             final FileDiscoverer discoverer = new FileDiscoverer();
             discoverer.discover(fileDiscoveryProperties);
             return;

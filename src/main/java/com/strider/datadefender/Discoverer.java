@@ -111,8 +111,12 @@ public abstract class Discoverer { //implements IDiscoverer {
             } catch (IOException ioe) {
                 log.error(ioe.toString());
             }
+            
         } catch (IOException ex) {
             log.error(ex.toString());
+        }
+        catch (NullPointerException en) {
+            log.error("Model loading problems. Please verify your configuration: " + en.toString());
         }
 
         return new Model(tokenizer, nameFinder, modelName);

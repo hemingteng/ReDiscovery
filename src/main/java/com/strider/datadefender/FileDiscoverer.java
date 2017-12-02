@@ -57,7 +57,6 @@ import opennlp.tools.util.StringList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
-import java.util.Properties;
 import java.util.LinkedHashSet;
 import java.util.Vector;
 import java.util.Enumeration;
@@ -66,12 +65,12 @@ import opennlp.tools.tokenize.SimpleTokenizer;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.sql.PreparedStatement;
 
 import com.strider.datadefender.database.BackendDBConnection;
 import com.strider.datadefender.database.DBConnection;
 import java.util.UUID;
 
+import static com.strider.datadefender.utils.AppProperties.loadPropertiesFromDB;
 import static com.strider.datadefender.utils.AppProperties.loadProperties;
 
 
@@ -122,11 +121,16 @@ public class FileDiscoverer extends Discoverer {
         final DecimalFormat decimalFormat = new DecimalFormat("#.##");
         log.info("List of suspects:");
         log.info(String.format("%s,%s,%s,%s,%s", "Directory", "Filename", "Probability", "Model", "[Dictionaries]"));
+
         for(final FileMatchMetaData data: finalList) {
             final String probability = decimalFormat.format(data.getAverageProbability());
-            backendDB.insertFileResultRow(dbc, randomUUIDString, now, data.getDirectory(), data.getFileName(), probability, data.getModel(), data.getDictionariesFound());
-            final String result = String.format("%s,%s,%s,%s,[%s]", data.getDirectory(), data.getFileName(), probability, data.getModel(), data.getDictionariesFound());
-            log.info(result);
+            // For each classification/dictionary write a line
+            for (String classificator: data.getDictionariesFoundList()) {
+            //if classificator == null 
+            backendDB.insertFileResultRow(dbc, randomUUIDString, now, data.getDirectory(), data.getFileName(), probability, data.getModel(), classificator);
+            }
+            //final String result = String.format("%s,%s,%s,%s,[%s]", data.getDirectory(), data.getFileName(), probability, data.getModel(), data.getDictionariesFound());
+            //log.info(result);
             
         }
         log.info("Writing to database the list of suspects...");

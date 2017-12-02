@@ -52,12 +52,11 @@ public class BackendDBConnection {
          
         ResultSet rs = null;
         try {
-        String SelectTableSQL = "SELECT VENDOR,DRIVER,USERNAME,PASSWORD,SCHEMA,URL FROM REDATASENSE.DB_PROPERTIES";
+        String SelectTableSQL = "SELECT VENDOR,DRIVER,USERNAME,PASSWORD,DBSCHEMA,URL from REDATASENSE.DB_PROPERTIES";
 
     dbConnection.setAutoCommit(false);
     PreparedStatement preparedStatement = dbConnection.prepareStatement(SelectTableSQL);    
     rs = preparedStatement.executeQuery(SelectTableSQL);
-    
     
     } catch (SQLException e) {
         e.printStackTrace();
