@@ -135,6 +135,7 @@ public class FileDiscoverer extends Discoverer {
         }
         log.info("Writing to database the list of suspects...");
         dbc.commit();
+        dbc.close();
         return Collections.unmodifiableList(fileMatches);
     }
 

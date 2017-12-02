@@ -71,6 +71,16 @@ import java.util.Map;
 import java.util.Vector;
 import java.util.Enumeration;
 import static com.strider.datadefender.utils.AppProperties.loadProperties;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
+import com.strider.datadefender.database.BackendDBConnection;
+import com.strider.datadefender.database.DBConnection;
+import java.util.UUID;
+
+import static com.strider.datadefender.utils.AppProperties.loadPropertiesFromDB;
+import static com.strider.datadefender.utils.AppProperties.loadProperties;
 
 
 
@@ -94,6 +104,16 @@ public class DatabaseDiscoverer extends Discoverer {
         final double probabilityThreshold = parseDouble(dataDiscoveryProperties.getProperty("probability_threshold"));
         final String calculate_score = dataDiscoveryProperties.getProperty("score_calculation");
         final String NERModel = dataDiscoveryProperties.getProperty("NERmodel");
+
+        // Initialize Data Connection to Store the results
+        // Version 3.0 - Redatasense
+        BackendDBConnection backendDB = new BackendDBConnection();
+        Connection dbc = backendDB.connect();
+        //generate UUID unique for identify the RUN
+        UUID uuid = UUID.randomUUID();
+        String randomUUIDString = uuid.toString();
+        java.sql.Timestamp now = new java.sql.Timestamp(new java.util.Date().getTime());
+
 
         log.info("Probability threshold [" + probabilityThreshold + "]");
 
@@ -140,6 +160,7 @@ public class DatabaseDiscoverer extends Discoverer {
 
 
             final List<Probability> probabilityList = data.getProbabilityList();
+            final ArrayList<String> SampleData = new ArrayList();
 
             Collections.sort(probabilityList,
                 Comparator.comparingDouble(Probability::getProbabilityValue).reversed());
@@ -154,6 +175,7 @@ public class DatabaseDiscoverer extends Discoverer {
             for (int i=0; i<y; i++) {
                 final Probability p = data.getProbabilityList().get(i);
                 log.info(p.getSentence() + ":" + p.getProbabilityValue());
+                SampleData.add(p.getSentence());
             }
 
             log.info("" );
@@ -166,11 +188,32 @@ public class DatabaseDiscoverer extends Discoverer {
 
           log.info(String.format("Summary: %s,%s,%s,%s,%s,%s", "Schema", "Table", "Column", "Probability", "Model", "[Dictionary/Model]"));
           final String result = String.format("Summary: %s,%s,%s,%s,%s,[%s]", data.getSchemaName(), data.getTableName(), data.getColumnName(), decimalFormat.format(data.getAverageProbability()), data.getModel(), data.getDictionariesFound());
+          
+          // writing to database;
+      
+            log.info("Writing to database the list of suspects...");
+            if (calculate_score.equals("yes")) { 
+            backendDB.insertDataDiscoveryRow(dbc, randomUUIDString, now, data.getColumnName(), data.getAverageProbability(), data.getModel(), data.getDictionariesFound(),rowCount, Double.parseDouble(score.columnScore(rowCount)), String.join(";", SampleData));
+            }
+            else{
+            backendDB.insertDataDiscoveryRow(dbc, randomUUIDString, now, data.getColumnName(), data.getAverageProbability(), data.getModel(), data.getDictionariesFound(),0, 0.0, String.join(";", SampleData));                    
+
+            }
+
           log.info(result);
           log.info("\n");
 
-
         }
+
+    try{
+        dbc.commit();
+        dbc.close();
+     } catch (SQLException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+    }
+
+
         // Only applicable when parameter table_rowcount=yes otherwise score calculation should not be done
         if (calculate_score.equals("yes")) {
         log.info("Overall score: " + score.dataStoreScore());

@@ -115,5 +115,39 @@ public final class AppProperties {
         }
     }
 
+    public static Properties loadPropertiesDBRepository() throws DataDefenderException {
+        BackendDBConnection backendDB = new BackendDBConnection();
+        Connection dbc = backendDB.connect();
+        final Properties pp = new Properties();
+        
+
+        ResultSet rs = null;
+        try {
+            String SelectTableSQL = "SELECT VENDOR,DRIVER,USERNAME,PASSWORD,DBSCHEMA,URL,ISACTIVE from REDATASENSE.DB_PROPERTIES";
+
+        dbc.setAutoCommit(false);
+        PreparedStatement preparedStatement = dbc.prepareStatement(SelectTableSQL);    
+        rs = preparedStatement.executeQuery(SelectTableSQL);
+        
+        while(rs.next()) {
+
+            pp.put("vendor", rs.getString("VENDOR"));
+            pp.put("driver", rs.getString("DRIVER"));
+            pp.put("username", rs.getString("USERNAME"));
+            pp.put("password", rs.getString("PASSWORD"));
+            pp.put("schema", rs.getString("DBSCHEMA"));
+            pp.put("url", rs.getString("URL"));
+            pp.put("isactive", rs.getBoolean("ISACTIVE"));
+            }
+
+        dbc.close();
+        return pp;
+        } 
+        catch (SQLException e) {
+            throw new DataDefenderException("ERROR: Unable to load properties from Database", e);
+        }
+    }
+
+
 
 }

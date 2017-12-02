@@ -18,8 +18,7 @@
 package com.strider.datadefender;
 
 import com.strider.datadefender.database.IDBFactory;
-import static com.strider.datadefender.utils.AppProperties.loadPropertiesFromDB;
-import static com.strider.datadefender.utils.AppProperties.loadProperties;
+import static com.strider.datadefender.utils.AppProperties.*;
 import com.strider.datadefender.utils.ApplicationLock;
 import java.io.IOException;
 import java.text.DecimalFormat;
@@ -112,7 +111,10 @@ public class DataDefender  {
             displayErrors(errors);
             return;
         }
-        final Properties props = loadProperties(line.getOptionValue('P', "db.properties"));
+        //final Properties props = loadProperties(line.getOptionValue('P', "db.properties"));
+        //Load data from the database
+        final Properties props = loadPropertiesDBRepository();
+        
         try (final IDBFactory dbFactory = IDBFactory.get(props);) {
             switch (cmd) {
                 case "database-discovery":
