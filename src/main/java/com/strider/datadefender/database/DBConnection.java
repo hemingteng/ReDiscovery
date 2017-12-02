@@ -22,6 +22,7 @@ import static java.lang.Class.forName;
 import static org.apache.log4j.Logger.getLogger;
 
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Properties;
 
@@ -35,11 +36,11 @@ import com.strider.datadefender.utils.ISupplierWithException;
 public abstract class DBConnection implements IDBConnection {
     private static final Logger log = getLogger(DBConnection.class);
 
-    protected final String driver;
-    protected final String vendor;
-    protected final String url;
-    protected final String userName;
-    protected final String password;
+    protected  String driver = null;
+    protected  String vendor = null;
+    protected  String url = null;
+    protected  String userName = null;
+    protected  String password = null;
     
     /**
      * Default constructor, initializes connection properties and loads db class.
@@ -47,11 +48,32 @@ public abstract class DBConnection implements IDBConnection {
      * @throws DatabaseAnonymizerException
      */
     public DBConnection(final Properties properties) throws DatabaseAnonymizerException {
+        
+        // Initialize Data Connection to Store the results
+        // Version 3.0 - Redatasense
+        BackendDBConnection backendDB = new BackendDBConnection();
+        Connection dbc = backendDB.connect();
+        ResultSet rs = backendDB.getDatabaseDiscoveryProperties(dbc);
+    try {
+        driver = rs.getString("DRIVER");
+        vendor = rs.getString("VENDOR");
+        url = rs.getString("URL");
+        userName = rs.getString("USERNAME");
+        password = rs.getString("PASSWORD");
+        
+    } 
+    catch (SQLException e) {
+        e.printStackTrace();
+    }
+
+
+       /*
         driver   = properties.getProperty("driver");
         vendor   = properties.getProperty("vendor");
         url      = properties.getProperty("url");
         userName = properties.getProperty("username");
         password = properties.getProperty("password");
+        */
         
         log.info("Database vendor: " + vendor);
         log.info("Using driver " + driver);

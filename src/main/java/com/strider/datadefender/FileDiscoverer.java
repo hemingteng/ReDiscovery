@@ -31,6 +31,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import org.apache.commons.io.FileUtils;
+import java.sql.PreparedStatement;
 
 
 import org.apache.commons.collections.ListUtils;
@@ -61,6 +62,16 @@ import java.util.LinkedHashSet;
 import java.util.Vector;
 import java.util.Enumeration;
 import opennlp.tools.tokenize.SimpleTokenizer;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.PreparedStatement;
+
+import com.strider.datadefender.database.BackendDBConnection;
+import com.strider.datadefender.database.DBConnection;
+import java.util.UUID;
+
 import static com.strider.datadefender.utils.AppProperties.loadProperties;
 
 
@@ -80,6 +91,17 @@ public class FileDiscoverer extends Discoverer {
     throws AnonymizerException, IOException, SAXException, TikaException, NullPointerException, Exception {
         log.info("Data discovery in process");
 
+        // Initialize Data Connection to Store the results
+        // Version 3.0 - Redatasense
+        BackendDBConnection backendDB = new BackendDBConnection();
+        Connection dbc = backendDB.connect();
+
+        //generate UUID unique for identify the RUN
+        UUID uuid = UUID.randomUUID();
+        String randomUUIDString = uuid.toString();
+        java.sql.Timestamp now = new java.sql.Timestamp(new java.util.Date().getTime());
+        
+
         // Get the probability threshold from property file
         final double probabilityThreshold = parseDouble(dataDiscoveryProperties.getProperty("probability_threshold"));
         log.info("Probability threshold [" + probabilityThreshold + "]");
@@ -90,10 +112,8 @@ public class FileDiscoverer extends Discoverer {
         log.info("Model list [" + Arrays.toString(modelList) + "]");
 
         List<FileMatchMetaData> finalList = new ArrayList<>();
-        for (String model: modelList) {
-            log.info("********************************");
-            log.info("Processing model " + model);
-            log.info("********************************");
+        for (String model: modelList) {         
+            log.info("Processing model: " + model);
             final Model modelPerson = createModel(dataDiscoveryProperties, model);
             fileMatches = discoverAgainstSingleModel(dataDiscoveryProperties, modelPerson, probabilityThreshold);
             finalList = ListUtils.union(finalList, fileMatches);
@@ -104,10 +124,13 @@ public class FileDiscoverer extends Discoverer {
         log.info(String.format("%s,%s,%s,%s,%s", "Directory", "Filename", "Probability", "Model", "[Dictionaries]"));
         for(final FileMatchMetaData data: finalList) {
             final String probability = decimalFormat.format(data.getAverageProbability());
+            backendDB.insertFileResultRow(dbc, randomUUIDString, now, data.getDirectory(), data.getFileName(), probability, data.getModel(), data.getDictionariesFound());
             final String result = String.format("%s,%s,%s,%s,[%s]", data.getDirectory(), data.getFileName(), probability, data.getModel(), data.getDictionariesFound());
             log.info(result);
+            
         }
-
+        log.info("Writing to database the list of suspects...");
+        dbc.commit();
         return Collections.unmodifiableList(fileMatches);
     }
 

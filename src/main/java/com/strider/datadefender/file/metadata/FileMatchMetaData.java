@@ -75,6 +75,12 @@ public class FileMatchMetaData {
         return dictionaries;
     }
 
+    public ArrayList<String> getDictionariesFoundList() {
+        //this.dictionariesFound = new ArrayList<String>();
+        ArrayList<String> dictionariesList = new ArrayList (new HashSet<String>(this.dictionariesFound));
+        return dictionariesList;
+    }
+
     public void setDictionariesFound(final ArrayList<String> dictionariesFound) {
         this.dictionariesFound = dictionariesFound;
     }
