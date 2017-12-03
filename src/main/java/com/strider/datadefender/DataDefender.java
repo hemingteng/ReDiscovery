@@ -136,8 +136,11 @@ public class DataDefender  {
                         if (errors.size() >0) {
                             displayErrors(errors);
                             return;
-                        }                        final String datadiscoveryPropertyFile = line.getOptionValue('D', "datadiscovery.properties");
-                        final Properties dataDiscoveryProperties = loadProperties(datadiscoveryPropertyFile);
+                        } 
+                        
+                        //final String datadiscoveryPropertyFile = line.getOptionValue('D', "datadiscovery.properties");
+                        final Properties dataDiscoveryProperties = loadPropertiesFromDB("DATADISCOVERY_PROPERTIES");
+                        //final Properties dataDiscoveryProperties = loadProperties(datadiscoveryPropertyFile);
                         final DatabaseDiscoverer discoverer = new DatabaseDiscoverer();
                         discoverer.discover(dbFactory, dataDiscoveryProperties, getTableNames(unparsedArgs, dataDiscoveryProperties));
                         if (line.hasOption('r')) {

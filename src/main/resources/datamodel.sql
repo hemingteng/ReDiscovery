@@ -79,8 +79,8 @@ ENGINE = InnoDB;
 -- Table `mydb`.`DATADISCOVERY_PROPERTIES`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `redatasense`.`DATADISCOVERY_PROPERTIES` (
-  `KEY` VARCHAR(256) NULL,
-  `VALUE` VARCHAR(4000) NULL)
+  `RKEY` VARCHAR(256) NULL,
+  `RVALUE` VARCHAR(4000) NULL)
 ENGINE = InnoDB;
 
 
