@@ -37,6 +37,16 @@ import com.strider.datadefender.utils.CommonUtils;
 import com.strider.datadefender.utils.Score;
 import java.util.LinkedHashSet;
 import java.util.Locale;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
+import com.strider.datadefender.database.BackendDBConnection;
+import com.strider.datadefender.database.DBConnection;
+import java.util.UUID;
+
+import static com.strider.datadefender.utils.AppProperties.loadPropertiesFromDB;
+import static com.strider.datadefender.utils.AppProperties.loadProperties;
 
 /**
  * @author Armenak Grigoryan
@@ -52,6 +62,14 @@ public class ColumnDiscoverer extends Discoverer {
         final IMetaData metaData = factory.fetchMetaData();
         final List<MatchMetaData> map = metaData.getMetaData();
         List<MatchMetaData> uniqueMatches = null;
+         BackendDBConnection backendDB = new BackendDBConnection();
+        Connection dbc = backendDB.connect();
+        //generate UUID unique for identify the RUN
+        UUID uuid = UUID.randomUUID();
+        String randomUUIDString = uuid.toString();
+        java.sql.Timestamp now = new java.sql.Timestamp(new java.util.Date().getTime());
+
+
 
         // Converting HashMap keys into ArrayList
         @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -80,9 +98,7 @@ public class ColumnDiscoverer extends Discoverer {
         if (matches != null && !matches.isEmpty()) {
             uniqueMatches = new ArrayList<>(new LinkedHashSet<>(matches));
 
-            log.info("-----------------");
             log.info("List of suspects:");
-            log.info("-----------------");
             uniqueMatches.sort(MatchMetaData.compare());
             final Score score = new Score();
             for (final MatchMetaData entry: uniqueMatches) {
@@ -95,7 +111,9 @@ public class ColumnDiscoverer extends Discoverer {
 
                 // Output
                 log.info("Column                     : " + entry);
-                log.info( CommonUtils.fixedLengthString('=', entry.toString().length() + 30));
+                backendDB.insertColumnDiscoveryRow(dbc, randomUUIDString, now, entry.getTableName(),entry.getColumnName());
+
+                //log.info( CommonUtils.fixedLengthString('=', entry.toString().length() + 30));
                 //log.info("Number of rows in the table: " + rowCount);
                 //log.info("Score                      : " + score.columnScore(rowCount) );
                 //log.info("Sample data");
@@ -103,8 +121,18 @@ public class ColumnDiscoverer extends Discoverer {
                 //for (final String sampleData: sampleDataList) {
                 //    log.info(sampleData);
                 //}
+
                 log.info("" );
             }
+            try{
+        log.info("Writing to database the list of suspects...");
+        dbc.commit();
+        dbc.close();
+     } catch (SQLException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+    }
+
             log.info("Overall score: " + score.dataStoreScore());
         } else {
             log.info("No suspects have been found. Please refine your criteria.");

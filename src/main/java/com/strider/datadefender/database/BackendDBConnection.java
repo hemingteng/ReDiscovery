@@ -3,6 +3,9 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Properties;
+import org.apache.log4j.Logger;
+import static org.apache.log4j.Logger.getLogger;
+
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -11,9 +14,9 @@ import java.sql.Timestamp;
 public class BackendDBConnection {
     // init database constants
     private static final String DATABASE_DRIVER = "com.mysql.jdbc.Driver";
-    private static final String DATABASE_URL = "jdbc:mysql://localhost:3306/redatasense";
-    private static final String USERNAME = "redatasense";
-    private static final String PASSWORD = "redatasense123!";
+    private static final String DATABASE_URL = "jdbc:mysql://redbackend.mysql.database.azure.com:3306/redatasense";
+    private static final String USERNAME = "redglue@redbackend";
+    private static final String PASSWORD = "Slackware3797";
     private static final String MAX_POOL = "250";
 
     // init connection object
@@ -28,6 +31,9 @@ public class BackendDBConnection {
             properties.setProperty("user", USERNAME);
             properties.setProperty("password", PASSWORD);
             properties.setProperty("MaxPooledStatements", MAX_POOL);
+            properties.setProperty("useSSL", "true");
+            properties.setProperty("autoReconnect", "true");
+
         }
         return properties;
     }
@@ -36,6 +42,7 @@ public class BackendDBConnection {
     public Connection connect() {
         if (connection == null) {
             try {
+                //log.info("Connecting to backend repository : "+ DATABASE_URL);
                 Class.forName(DATABASE_DRIVER);
                 connection = DriverManager.getConnection(DATABASE_URL, getProperties());
                 
@@ -131,27 +138,22 @@ public class BackendDBConnection {
     }
 
 
-    public void insertColumnDiscoveryRow (Connection dbConnection, String RunID, Timestamp now, String columnName, Double Probability, String Model, String Dictionary, Integer numRows, Double score, String sampleData)
+    public void insertColumnDiscoveryRow (Connection dbConnection, String RunID, Timestamp now, String Tablename, String columnName)
     {
          
        
         
         try {
         String insertTableSQL = "INSERT INTO REDATASENSE.COLUMN_RESULTS"
-		+ "(`ID_DB`, `RUN_ID`, `RUN_TIMESTAMP`, `COLUMN`) VALUES "
-        + "((select max(ID_DB) from REDATASENSE.DB_PROPERTIES),?,?,?)";
+		+ "(`ID_DB`, `RUN_ID`, `RUN_TIMESTAMP`, `TABLE`, `COLUMN`) VALUES "
+        + "((select max(ID_DB) from REDATASENSE.DB_PROPERTIES),?,?,?,?)";
 
     dbConnection.setAutoCommit(false);
     PreparedStatement preparedStatement = dbConnection.prepareStatement(insertTableSQL);
     preparedStatement.setString(1, RunID);
     preparedStatement.setTimestamp(2, now);
-    preparedStatement.setString(3, columnName);
-    preparedStatement.setDouble(4, Probability);
-    preparedStatement.setString(5, Model);
-    preparedStatement.setString(6, Dictionary);
-    preparedStatement.setInt(7, numRows);
-    preparedStatement.setDouble(8, score);
-    preparedStatement.setString(9, sampleData);
+    preparedStatement.setString(3, Tablename);
+    preparedStatement.setString(4, columnName);
 
     
     // execute insert SQL stetement
