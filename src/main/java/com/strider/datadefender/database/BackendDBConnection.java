@@ -131,6 +131,40 @@ public class BackendDBConnection {
     }
 
 
+    public void insertColumnDiscoveryRow (Connection dbConnection, String RunID, Timestamp now, String columnName, Double Probability, String Model, String Dictionary, Integer numRows, Double score, String sampleData)
+    {
+         
+       
+        
+        try {
+        String insertTableSQL = "INSERT INTO REDATASENSE.COLUMN_RESULTS"
+		+ "(`ID_DB`, `RUN_ID`, `RUN_TIMESTAMP`, `COLUMN`) VALUES "
+        + "((select max(ID_DB) from REDATASENSE.DB_PROPERTIES),?,?,?)";
+
+    dbConnection.setAutoCommit(false);
+    PreparedStatement preparedStatement = dbConnection.prepareStatement(insertTableSQL);
+    preparedStatement.setString(1, RunID);
+    preparedStatement.setTimestamp(2, now);
+    preparedStatement.setString(3, columnName);
+    preparedStatement.setDouble(4, Probability);
+    preparedStatement.setString(5, Model);
+    preparedStatement.setString(6, Dictionary);
+    preparedStatement.setInt(7, numRows);
+    preparedStatement.setDouble(8, score);
+    preparedStatement.setString(9, sampleData);
+
+    
+    // execute insert SQL stetement
+    preparedStatement.executeUpdate();
+    
+    } catch (SQLException e) {
+        e.printStackTrace();
+    }
+    //return dbConnection;
+    
+    }
+
+
     // disconnect database
     public void disconnect() {
         if (connection != null) {
