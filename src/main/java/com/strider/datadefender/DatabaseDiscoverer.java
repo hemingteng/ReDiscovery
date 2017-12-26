@@ -293,14 +293,6 @@ public class DatabaseDiscoverer extends Discoverer {
         // NEREntropy - Uses only NER MaxEntropy OpenNLP trained models
         // NERDictionary - Uses only Dictionary XML OPenNLP implementation
         // NERRegex - Uses only Regex OpenNLP models
-        // NEREntropyDictionary - Uses MaxEntropy and compares to Dictionary - Returns only the ones present in the dictionary
-
-        //final InputStream DictstreamDB = new FileInputStream(dictionaryPath);
-
-        //Dictionary rawdictDB = new Dictionary(DictstreamDB);
-        //DictionaryNameFinder dictionaryNERDB = new DictionaryNameFinder(rawdictDB, "NERDB");
-
-
 
         if (specialCaseFunctions != null && specialCaseFunctions.length > 0) {
             specialCase = true;

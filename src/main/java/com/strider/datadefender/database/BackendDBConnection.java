@@ -3,8 +3,15 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Properties;
+
+import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.log4j.Logger;
 import static org.apache.log4j.Logger.getLogger;
+
+import com.strider.datadefender.DataDefenderException;
+
+import static com.strider.datadefender.utils.AppProperties.loadProperties;
+
 
 
 import java.sql.PreparedStatement;
@@ -13,11 +20,11 @@ import java.sql.Timestamp;
 
 public class BackendDBConnection {
     // init database constants
-    private static final String DATABASE_DRIVER = "com.mysql.jdbc.Driver";
-    private static final String DATABASE_URL = "jdbc:mysql://redbackend.mysql.database.azure.com:3306/redatasense";
-    private static final String USERNAME = "redglue@redbackend";
-    private static final String PASSWORD = "Slackware3797";
-    private static final String MAX_POOL = "250";
+    //private static final String DATABASE_DRIVER = "com.mysql.jdbc.Driver";
+    //private static final String DATABASE_URL = "jdbc:mysql://redbackend.mysql.database.azure.com:3306/redatasense";
+    //private static final String USERNAME = "redglue@redbackend";
+    //private static final String PASSWORD = "Slackware3797";
+    //private static final String MAX_POOL = "250";
 
     // init connection object
     private Connection connection;
@@ -25,14 +32,24 @@ public class BackendDBConnection {
     private Properties properties;
 
     // create properties
-    private Properties getProperties() {
+    private Properties getProperties() throws DataDefenderException {
+
+        final Properties dbProperties = loadProperties("backend.properties");
+
         if (properties == null) {
             properties = new Properties();
-            properties.setProperty("user", USERNAME);
-            properties.setProperty("password", PASSWORD);
-            properties.setProperty("MaxPooledStatements", MAX_POOL);
-            properties.setProperty("useSSL", "true");
-            properties.setProperty("autoReconnect", "true");
+            properties.setProperty("user", dbProperties.getProperty("username"));
+            properties.setProperty("password", dbProperties.getProperty("password"));
+            properties.setProperty("driver", dbProperties.getProperty("driver"));
+            properties.setProperty("url", dbProperties.getProperty("url"));
+            properties.setProperty("useSSL", dbProperties.getProperty("useSSL"));
+            properties.setProperty("autoReconnect", dbProperties.getProperty("autoReconnect"));
+            properties.setProperty("autoReconnect", dbProperties.getProperty("autoReconnect"));
+
+
+           // properties.setProperty("MaxPooledStatements", "250");
+            //properties.setProperty("useSSL", "false");
+            //properties.setProperty("autoReconnect", "true");
 
         }
         return properties;
@@ -42,13 +59,20 @@ public class BackendDBConnection {
     public Connection connect() {
         if (connection == null) {
             try {
+                final Properties backEndProperties = getProperties();
                 //log.info("Connecting to backend repository : "+ DATABASE_URL);
+                String DATABASE_DRIVER = backEndProperties.getProperty("driver");
+                String DATABASE_URL = backEndProperties.getProperty("url");
                 Class.forName(DATABASE_DRIVER);
                 connection = DriverManager.getConnection(DATABASE_URL, getProperties());
+                connection.setAutoCommit(false);
                 
             } catch (ClassNotFoundException | SQLException e) {
                 e.printStackTrace();
-            }
+            } catch (DataDefenderException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
         }
         return connection;
     }

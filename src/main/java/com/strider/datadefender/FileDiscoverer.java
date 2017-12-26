@@ -124,11 +124,19 @@ public class FileDiscoverer extends Discoverer {
 
         for(final FileMatchMetaData data: finalList) {
             final String probability = decimalFormat.format(data.getAverageProbability());
-            // For each classification/dictionary write a line
+            
+            if (data.getDictionariesFoundList().isEmpty())
+            {
+              backendDB.insertFileResultRow(dbc, randomUUIDString, now, data.getDirectory(), data.getFileName(), probability, data.getModel(), data.getDictionariesFound());
+            }
+            else {
+              // For each classification/dictionary write a line
             for (String classificator: data.getDictionariesFoundList()) {
             //if classificator == null 
             backendDB.insertFileResultRow(dbc, randomUUIDString, now, data.getDirectory(), data.getFileName(), probability, data.getModel(), classificator);
             }
+          }
+
             //final String result = String.format("%s,%s,%s,%s,[%s]", data.getDirectory(), data.getFileName(), probability, data.getModel(), data.getDictionariesFound());
             //log.info(result);
             
@@ -273,6 +281,7 @@ public class FileDiscoverer extends Discoverer {
                     switch (NERModel) {
 
                       case "NERDictionary":
+                        log.info ("**** NERDictionary mode: on *** ");
                         DictionariesFound = new ArrayList<String>();
                         log.info("Loading Dictionaries..Please wait");
                         findersDict = getDictionariesFileForSearch(dictionaryPathList, nodeDict);
@@ -303,7 +312,8 @@ public class FileDiscoverer extends Discoverer {
 
 
                     case "NEREntropy":
-
+                    log.info ("**** NEREntropy mode: on *** ");
+                    DictionariesFound = new ArrayList<String>();
                     log.debug("Tokenizing for file is starting...");
                     log.debug("Content: " + handlerString);
                     final String tokens[] = model.getTokenizer().tokenize(handler.toString());
@@ -313,15 +323,14 @@ public class FileDiscoverer extends Discoverer {
 
                     //display names
                     probabilityList = new ArrayList<>();
-                    final String nameSpansString = Arrays.toString(Span.spansToStrings(nameSpans, tokens));
 
                     log.info("Comparing results...");
                     for( int i = 0; i < nameSpans.length; i++) {
-
                           log.info("Probability is: "+spanProbs[i] +" for text: " + tokens[nameSpans[i].getStart()]);
                           probabilityList.add(new Probability(tokens[nameSpans[i].getStart()], spanProbs[i]));
 
                     }
+                    //DictionariesFound.add(nameSpans[i].getType());
                     model.getNameFinder().clearAdaptiveData();
                     averageProbability = calculateAverage(probabilityList);
                     break;
@@ -330,6 +339,7 @@ public class FileDiscoverer extends Discoverer {
 
                     // REGEX OpenNLP implementation;
                     case "NERRegex":
+                      log.info ("**** NERRegex mode: on *** ");
                       DictionariesFound = new ArrayList<String>();
                       final Properties RegexProperties = loadProperties("regex.properties");
                       log.info("Tokenizing for file is starting...");

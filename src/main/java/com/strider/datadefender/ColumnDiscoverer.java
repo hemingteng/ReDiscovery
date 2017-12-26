@@ -129,6 +129,8 @@ public class ColumnDiscoverer extends Discoverer {
         dbc.commit();
         dbc.close();
      } catch (SQLException e) {
+        log.error("ERROR: There was a problem writing results to database");
+
         // TODO Auto-generated catch block
         e.printStackTrace();
     }
