@@ -42,6 +42,7 @@ public class MatchMetaData {
     private final int columnSize;
     private double averageProbability;
     private String model = "";
+    private String modelMode = "";
     private List<Probability> probabilityList = new ArrayList<>();
     private String dictionariesFound = "";
 
@@ -98,8 +99,16 @@ public class MatchMetaData {
         return this.model;
     }
 
+    public String getModelMode() {
+        return this.modelMode;
+    }
+
     public void setModel(final String model) {
         this.model = model;
+    }
+
+    public void setModelMode(final String modelMode) {
+        this.modelMode = modelMode;
     }
 
     public String getDictionariesFound() {

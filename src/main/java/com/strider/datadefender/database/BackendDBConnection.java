@@ -98,14 +98,14 @@ public class BackendDBConnection {
 
 
 
-    public void insertFileResultRow (Connection dbConnection, String RunID, Timestamp now, String Directory, String Filename, String Probability, String Model, String Dictionary)
+    public void insertFileResultRow (Connection dbConnection, String RunID, Timestamp now, String Directory, String Filename, String Probability, String Model, String ModelMode, String Dictionary)
     {
          
         
         try {
         String insertTableSQL = "INSERT INTO REDATASENSE.FILE_RESULTS"
-		+ "(RUN_ID, RUN_TIMESTAMP, DIRECTORY, FILENAME, PROBABILITY, MODEL, DICTIONARY) VALUES"
-        + "(?,?,?,?,?,?,?)";
+		+ "(RUN_ID, RUN_TIMESTAMP, DIRECTORY, FILENAME, PROBABILITY, MODEL, MODELMODE, DICTIONARY) VALUES"
+        + "(?,?,?,?,?,?,?,?)";
 
     dbConnection.setAutoCommit(false);
     PreparedStatement preparedStatement = dbConnection.prepareStatement(insertTableSQL);
@@ -115,7 +115,8 @@ public class BackendDBConnection {
     preparedStatement.setString(4, Filename);
     preparedStatement.setString(5, Probability);
     preparedStatement.setString(6, Model);
-    preparedStatement.setString(7, Dictionary);
+    preparedStatement.setString(7, ModelMode);
+    preparedStatement.setString(8, Dictionary);
     
     // execute insert SQL stetement
     preparedStatement.executeUpdate();
@@ -128,15 +129,15 @@ public class BackendDBConnection {
     }
 
 
-    public void insertDataDiscoveryRow (Connection dbConnection, String RunID, Timestamp now, String columnName, Double Probability, String Model, String Dictionary, Integer numRows, Double score, String sampleData)
+    public void insertDataDiscoveryRow (Connection dbConnection, String RunID, Timestamp now, String columnName, Double Probability, String Model, String ModelMode, String Dictionary, Integer numRows, Double score, String sampleData)
     {
          
        
         
         try {
         String insertTableSQL = "INSERT INTO REDATASENSE.DATA_RESULTS"
-		+ "(`ID_DB`, `RUN_ID`, `RUN_TIMESTAMP`, `COLUMN`, `PROBABILITY`, `MODEL`, `DICTIONARY`, `NUM_ROWS`, `SCORE`, `SAMPLE_DATA`) VALUES "
-        + "((select max(ID_DB) from REDATASENSE.DB_PROPERTIES),?,?,?,?,?,?,?,?,?)";
+		+ "(`ID_DB`, `RUN_ID`, `RUN_TIMESTAMP`, `COLUMN_NAME`, `PROBABILITY`, `MODEL`, `MODELMODE`, `DICTIONARY`, `NUM_ROWS`, `SCORE`, `SAMPLE_DATA`) VALUES "
+        + "((select max(ID_DB) from REDATASENSE.DB_PROPERTIES),?,?,?,?,?,?,?,?,?,?)";
 
     dbConnection.setAutoCommit(false);
     PreparedStatement preparedStatement = dbConnection.prepareStatement(insertTableSQL);
@@ -145,10 +146,11 @@ public class BackendDBConnection {
     preparedStatement.setString(3, columnName);
     preparedStatement.setDouble(4, Probability);
     preparedStatement.setString(5, Model);
-    preparedStatement.setString(6, Dictionary);
-    preparedStatement.setInt(7, numRows);
-    preparedStatement.setDouble(8, score);
-    preparedStatement.setString(9, sampleData);
+    preparedStatement.setString(6, ModelMode);
+    preparedStatement.setString(7, Dictionary);
+    preparedStatement.setInt(8, numRows);
+    preparedStatement.setDouble(9, score);
+    preparedStatement.setString(10, sampleData);
 
     
     // execute insert SQL stetement
@@ -169,7 +171,7 @@ public class BackendDBConnection {
         
         try {
         String insertTableSQL = "INSERT INTO REDATASENSE.COLUMN_RESULTS"
-		+ "(`ID_DB`, `RUN_ID`, `RUN_TIMESTAMP`, `TABLE`, `COLUMN`) VALUES "
+		+ "(`ID_DB`, `RUN_ID`, `RUN_TIMESTAMP`, `TABLE_NAME`, `COLUMN_NAME`) VALUES "
         + "((select max(ID_DB) from REDATASENSE.DB_PROPERTIES),?,?,?,?)";
 
     dbConnection.setAutoCommit(false);

@@ -193,10 +193,10 @@ public class DatabaseDiscoverer extends Discoverer {
       
             log.info("Writing to database the list of suspects...");
             if (calculate_score.equals("yes")) { 
-            backendDB.insertDataDiscoveryRow(dbc, randomUUIDString, now, data.getColumnName(), data.getAverageProbability(), data.getModel(), data.getDictionariesFound(),rowCount, Double.parseDouble(score.columnScore(rowCount)), String.join(";", SampleData));
+            backendDB.insertDataDiscoveryRow(dbc, randomUUIDString, now, data.getColumnName(), data.getAverageProbability(), data.getModel(), data.getModelMode(), data.getDictionariesFound(),rowCount, Double.parseDouble(score.columnScore(rowCount)), String.join("", SampleData));
             }
             else{
-            backendDB.insertDataDiscoveryRow(dbc, randomUUIDString, now, data.getColumnName(), data.getAverageProbability(), data.getModel(), data.getDictionariesFound(),0, 0.0, String.join(";", SampleData));                    
+            backendDB.insertDataDiscoveryRow(dbc, randomUUIDString, now, data.getColumnName(), data.getAverageProbability(), data.getModel(), data.getModelMode(), data.getDictionariesFound(),0, 0.0, String.join(";", SampleData));                    
 
             }
 
@@ -210,6 +210,7 @@ public class DatabaseDiscoverer extends Discoverer {
         dbc.close();
      } catch (SQLException e) {
         // TODO Auto-generated catch block
+        log.error("ERROR: There was a problem writing results to database");
         e.printStackTrace();
     }
 
@@ -478,6 +479,7 @@ public class DatabaseDiscoverer extends Discoverer {
                           // END OF DICTIONARY LOOKUP
 
                         case "NEREntropy":
+                          DictionariesFound = new ArrayList<String>();
                           final String tokens[] = model.getTokenizer().tokenize(processingValue);
                           // Find names
                           final Span nameSpans[] = model.getNameFinder().find(tokens);
@@ -498,7 +500,7 @@ public class DatabaseDiscoverer extends Discoverer {
                         data.setProbabilityList(probabilityList);
                         averageProbability = calculateAverage(probabilityList);
                         model.getNameFinder().clearAdaptiveData();
-                        data.setDictionariesFound(model.getName());
+                        data.setDictionariesFound("");
                         data.setAverageProbability(averageProbability);
                         break;
 
@@ -513,7 +515,8 @@ public class DatabaseDiscoverer extends Discoverer {
 
             if ((averageProbability >= probabilityThreshold)) {
 
-              data.setModel(NERModel);
+              data.setModelMode(NERModel);
+              data.setModel(model.getName());
               matches.add(data);
               }
 

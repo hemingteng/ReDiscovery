@@ -20,10 +20,10 @@ package com.strider.datadefender.file.metadata;
 
 //import java.util.*;
 import java.util.Comparator;
-import java.util.List;
+//import java.util.List;
 import java.util.ArrayList;
 import java.util.HashSet;
-import org.apache.commons.lang3.StringUtils;
+//import org.apache.commons.lang3.StringUtils;
 
 
 
@@ -40,6 +40,7 @@ public class FileMatchMetaData {
     private final String fileName;
     private double averageProbability;
     private String model = "";
+    private String modelMode = "";
     private ArrayList<String> dictionariesFound = new ArrayList<String>();
 
     public FileMatchMetaData(final String directory, final String fileName) {
@@ -67,6 +68,10 @@ public class FileMatchMetaData {
         return this.model;
     }
 
+    public String getModelMode() {
+        return this.modelMode;
+    }
+
     public String getDictionariesFound() {
         //this.dictionariesFound = new ArrayList<String>();
         ArrayList<String> dedup = new ArrayList (new HashSet<String>(this.dictionariesFound));
@@ -87,6 +92,10 @@ public class FileMatchMetaData {
 
     public void setModel(final String model) {
         this.model = model;
+    }
+
+    public void setModelMode(final String modelMode) {
+        this.modelMode = modelMode;
     }
 
     @Override

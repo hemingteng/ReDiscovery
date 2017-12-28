@@ -119,21 +119,21 @@ public class FileDiscoverer extends Discoverer {
         }
 
         final DecimalFormat decimalFormat = new DecimalFormat("#.##");
-        log.info("List of suspects:");
-        log.info(String.format("%s,%s,%s,%s,%s", "Directory", "Filename", "Probability", "Model", "[Dictionaries]"));
+        //log.info("List of suspects:");
+        //log.info(String.format("%s,%s,%s,%s,%s", "Directory", "Filename", "Probability", "Model", "[Dictionaries]"));
 
         for(final FileMatchMetaData data: finalList) {
             final String probability = decimalFormat.format(data.getAverageProbability());
             
             if (data.getDictionariesFoundList().isEmpty())
             {
-              backendDB.insertFileResultRow(dbc, randomUUIDString, now, data.getDirectory(), data.getFileName(), probability, data.getModel(), data.getDictionariesFound());
+              backendDB.insertFileResultRow(dbc, randomUUIDString, now, data.getDirectory(), data.getFileName(), probability, data.getModel(), data.getModelMode(), data.getDictionariesFound());
             }
             else {
               // For each classification/dictionary write a line
             for (String classificator: data.getDictionariesFoundList()) {
             //if classificator == null 
-            backendDB.insertFileResultRow(dbc, randomUUIDString, now, data.getDirectory(), data.getFileName(), probability, data.getModel(), classificator);
+            backendDB.insertFileResultRow(dbc, randomUUIDString, now, data.getDirectory(), data.getFileName(), probability, data.getModel(), data.getModelMode(), classificator);
             }
           }
 
@@ -144,6 +144,7 @@ public class FileDiscoverer extends Discoverer {
         log.info("Writing to database the list of suspects...");
         dbc.commit();
         dbc.close();
+        log.info("Done");
         return Collections.unmodifiableList(fileMatches);
     }
 
@@ -367,7 +368,7 @@ public class FileDiscoverer extends Discoverer {
                       Span[] resultRegex = finder.find(tokensRegex);
 
                       log.info("Evaluating Regex results...");
-                      final String RegexSpam = Arrays.toString(Span.spansToStrings(resultRegex, tokensRegex));
+                      //final String RegexSpam = Arrays.toString(Span.spansToStrings(resultRegex, tokensRegex));
                       String getRegexType = "N/A";
                       for( int i = 0; i < resultRegex.length; i++) {
                             getRegexType = resultRegex[i].getType();
@@ -393,6 +394,7 @@ public class FileDiscoverer extends Discoverer {
                         //final FileMatchMetaData result = new FileMatchMetaData(recursivedir, file);
                         result.setAverageProbability(averageProbability);
                         result.setModel(model.getName());
+                        result.setModelMode(NERModel);
                         result.setDictionariesFound(DictionariesFound);
                         fileMatches.add(result);
                     }
