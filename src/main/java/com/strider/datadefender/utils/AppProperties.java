@@ -1,6 +1,6 @@
 /*
  * 
- * Copyright 2014, Armenak Grigoryan, and individual contributors as indicated
+ * Copyright 2014, Armenak Grigoryan, Redglue and individual contributors as indicated
  * by the @authors tag. See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -30,18 +30,19 @@ import java.util.Properties;
 import com.strider.datadefender.DataDefenderException;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
+//import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.PreparedStatement;
 
 
 import com.strider.datadefender.database.BackendDBConnection;
-import com.strider.datadefender.database.DBConnection;
+//import com.strider.datadefender.database.DBConnection;
 
 /**
  *
  * @author Armenak Grigoryan
+ * @author Redglue
  */
 public final class AppProperties {
     
@@ -111,7 +112,7 @@ public final class AppProperties {
         return properties;
         } 
         catch (SQLException e) {
-            throw new DataDefenderException("ERROR: Unable to load properties from Database", e);
+            throw new DataDefenderException("Error: Unable to load properties from Database", e);
         }
     }
 
@@ -123,7 +124,7 @@ public final class AppProperties {
 
         ResultSet rs = null;
         try {
-            String SelectTableSQL = "SELECT VENDOR,DRIVER,USERNAME,PASSWORD,DBSCHEMA,URL,ISACTIVE from REDATASENSE.DB_PROPERTIES";
+            String SelectTableSQL = "SELECT VENDOR,DRIVER,USERNAME,PASSWORD,DBSCHEMA,URL,ISACTIVE from REDATASENSE.DB_PROPERTIES where ISACTIVE=1";
 
         dbc.setAutoCommit(false);
         PreparedStatement preparedStatement = dbc.prepareStatement(SelectTableSQL);    
@@ -144,7 +145,7 @@ public final class AppProperties {
         return pp;
         } 
         catch (SQLException e) {
-            throw new DataDefenderException("ERROR: Unable to load properties from Database", e);
+            throw new DataDefenderException("Error: Unable to load properties from Database", e);
         }
     }
 
