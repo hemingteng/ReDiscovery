@@ -18,36 +18,44 @@
 
 package com.strider.datadefender;
 
+import static com.strider.datadefender.utils.AppProperties.loadProperties;
 import static java.lang.Double.parseDouble;
 import static java.util.regex.Pattern.compile;
 import static org.apache.log4j.Logger.getLogger;
-import org.apache.commons.collections.ListUtils;
-import opennlp.tools.dictionary.Dictionary;
-import opennlp.tools.namefind.DictionaryNameFinder;
-import opennlp.tools.namefind.RegexNameFinder;
-import opennlp.tools.namefind.TokenNameFinderModel;
-import opennlp.tools.namefind.TokenNameFinder;
-import opennlp.tools.util.StringList;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
-import java.util.Set;
-import java.util.regex.Pattern;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.sql.Connection;
+//import java.sql.DriverManager;
+//import java.sql.SQLException;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.text.DateFormat;
+import java.text.DecimalFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+//import java.util.Vector;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+//import com.strider.datadefender.database.DBConnection;
+import java.util.UUID;
+import java.util.regex.Pattern;
 
-
-import opennlp.tools.util.Span;
-
-import org.apache.log4j.Logger;
-
+import com.strider.datadefender.database.BackendDBConnection;
 import com.strider.datadefender.database.IDBFactory;
 import com.strider.datadefender.database.metadata.IMetaData;
 import com.strider.datadefender.database.metadata.MatchMetaData;
@@ -57,30 +65,18 @@ import com.strider.datadefender.report.ReportUtil;
 import com.strider.datadefender.specialcase.SpecialCase;
 import com.strider.datadefender.utils.CommonUtils;
 import com.strider.datadefender.utils.Score;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Vector;
-import java.util.Enumeration;
-import static com.strider.datadefender.utils.AppProperties.loadProperties;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
 
-import com.strider.datadefender.database.BackendDBConnection;
-import com.strider.datadefender.database.DBConnection;
-import java.util.UUID;
+import org.apache.commons.collections4.ListUtils;
+import org.apache.log4j.Logger;
 
-import static com.strider.datadefender.utils.AppProperties.loadPropertiesFromDB;
-import static com.strider.datadefender.utils.AppProperties.loadProperties;
+import opennlp.tools.dictionary.Dictionary;
+import opennlp.tools.namefind.DictionaryNameFinder;
+import opennlp.tools.namefind.RegexNameFinder;
+import opennlp.tools.namefind.TokenNameFinder;
+import opennlp.tools.util.Span;
+
+//import static com.strider.datadefender.utils.AppProperties.loadPropertiesFromDB;
+//import static com.strider.datadefender.utils.AppProperties.loadProperties;
 
 
 

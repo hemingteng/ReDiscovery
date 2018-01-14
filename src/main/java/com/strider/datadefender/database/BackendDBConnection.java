@@ -4,10 +4,6 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Properties;
 
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.log4j.Logger;
-import static org.apache.log4j.Logger.getLogger;
-
 import com.strider.datadefender.DataDefenderException;
 
 import static com.strider.datadefender.utils.AppProperties.loadProperties;
@@ -83,7 +79,7 @@ public class BackendDBConnection {
          
         ResultSet rs = null;
         try {
-        String SelectTableSQL = "SELECT VENDOR,DRIVER,USERNAME,PASSWORD,DBSCHEMA,URL,ISACTIVE from REDATASENSE.DB_PROPERTIES";
+        String SelectTableSQL = "SELECT VENDOR,DRIVER,USERNAME,PASSWORD,DBSCHEMA,URL,ISACTIVE from REDATASENSE.DB_PROPERTIES WHERE ISACTIVE=1";
 
     dbConnection.setAutoCommit(false);
     PreparedStatement preparedStatement = dbConnection.prepareStatement(SelectTableSQL);    
@@ -137,7 +133,7 @@ public class BackendDBConnection {
         try {
         String insertTableSQL = "INSERT INTO REDATASENSE.DATA_RESULTS"
 		+ "(`ID_DB`, `RUN_ID`, `RUN_TIMESTAMP`, `COLUMN_NAME`, `PROBABILITY`, `MODEL`, `MODELMODE`, `DICTIONARY`, `NUM_ROWS`, `SCORE`, `SAMPLE_DATA`) VALUES "
-        + "((select max(ID_DB) from REDATASENSE.DB_PROPERTIES),?,?,?,?,?,?,?,?,?,?)";
+        + "((select max(ID_DB) from REDATASENSE.DB_PROPERTIES where ISACTIVE=1),?,?,?,?,?,?,?,?,?,?)";
 
     dbConnection.setAutoCommit(false);
     PreparedStatement preparedStatement = dbConnection.prepareStatement(insertTableSQL);
@@ -172,7 +168,7 @@ public class BackendDBConnection {
         try {
         String insertTableSQL = "INSERT INTO REDATASENSE.COLUMN_RESULTS"
 		+ "(`ID_DB`, `RUN_ID`, `RUN_TIMESTAMP`, `TABLE_NAME`, `COLUMN_NAME`) VALUES "
-        + "((select max(ID_DB) from REDATASENSE.DB_PROPERTIES),?,?,?,?)";
+        + "((select max(ID_DB) from REDATASENSE.DB_PROPERTIES where ISACTIVE=1),?,?,?,?)";
 
     dbConnection.setAutoCommit(false);
     PreparedStatement preparedStatement = dbConnection.prepareStatement(insertTableSQL);

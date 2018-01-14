@@ -30,17 +30,18 @@ import java.util.Properties;
  */
 public class PropertyCheck {
 
-    private static final String[] fileDiscoveryProperties = {"probability_threshold", "tokens", "models", "directories", "dictionary_path", "files_excluded", "NERmodel"};
-    private static final String[] dataDiscoveryProperties = {"probability_threshold", "tokens", "models", "score_calculation", "dictionary_path", "NERmodel"};
+    //private static final String[] fileDiscoveryProperties = {"probability_threshold", "tokens", "models", "directories", "dictionary_path", "files_excluded", "NERmodel"};
+    //private static final String[] dataDiscoveryProperties = {"probability_threshold", "tokens", "models", "score_calculation", "dictionary_path", "NERmodel"};
     private static final String[] databaseProperties = {"vendor", "driver", "username", "password", "url"};
-    private static final String[] dataAnonymizerProperties = {"requirement", "batch_size"};
+    //private static final String[] dataAnonymizerProperties = {"requirement", "batch_size"};
 
     @SuppressWarnings("unchecked")
 
     public static List checkDtabaseProperties() throws DataDefenderException {
+       
         final List<String> errors = new ArrayList<>();
 
-        final Properties dbProperties = loadProperties("db.properties");
+        final Properties dbProperties = loadProperties("backend.properties");
 
         for (int i=0; i<databaseProperties.length; i++ ) {
             final String property = dbProperties.getProperty(databaseProperties[i]);
@@ -51,14 +52,14 @@ public class PropertyCheck {
         return errors;
     }
 
-    @SuppressWarnings("unchecked")
-    public static List check(final String utiity, final char option) throws DataDefenderException {
+  //  @SuppressWarnings("unchecked")
+  /*  public static List check(final String utiity, final char option) throws DataDefenderException {
 
         final List errors = new ArrayList<>();
         if ("file-discovery".equals(utiity)) {
             final Properties properties = loadProperties("filediscovery.properties");
 
-            for (int i=0; i<fileDiscoveryProperties.length; i++ ) {
+            for (int i = 0; i < fileDiscoveryProperties.length; i++) {
                 final String property = properties.getProperty(fileDiscoveryProperties[i]);
                 if (property == null || "".equals(property)) {
                     errors.add("Property " + fileDiscoveryProperties[i] + " is not defined");
@@ -67,7 +68,7 @@ public class PropertyCheck {
         } else if ("anonymize".equals(utiity)) {
             final Properties properties = loadProperties("anonymizer.properties");
 
-            for (int i=0; i<dataAnonymizerProperties.length; i++ ) {
+            for (int i = 0; i < dataAnonymizerProperties.length; i++) {
                 final String property = properties.getProperty(dataAnonymizerProperties[i]);
                 if (property == null || "".equals(property)) {
                     errors.add("Property " + dataAnonymizerProperties[i] + " is not defined");
@@ -82,7 +83,7 @@ public class PropertyCheck {
             } else if ("d".equals(option)) {
                 final Properties properties = loadProperties("datadiscovery.properties");
 
-                for (int i=0; i<dataDiscoveryProperties.length; i++ ) {
+                for (int i = 0; i < dataDiscoveryProperties.length; i++) {
                     final String property = properties.getProperty(dataDiscoveryProperties[i]);
                     if (property == null || "".equals(property)) {
                         errors.add("Property " + dataDiscoveryProperties[i] + " is not defined");
@@ -92,4 +93,5 @@ public class PropertyCheck {
         }
         return errors;
     }
+    */
 }

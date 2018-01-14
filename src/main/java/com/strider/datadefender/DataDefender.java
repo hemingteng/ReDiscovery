@@ -92,11 +92,11 @@ public class DataDefender  {
 
         List errors = new ArrayList();
         if ("file-discovery".equals(cmd)) {
-            errors = PropertyCheck.check(cmd, ' ');
-            if (errors.size() >0) {
-                displayErrors(errors);
-                return;
-            }
+        //    errors = PropertyCheck.check(cmd, ' ');
+        //    if (errors.size() >0) {
+        //        displayErrors(errors);
+         //       return;
+         //   }
             //final String fileDiscoveryPropertyFile = line.getOptionValue('F', "filediscovery.properties");
             //final Properties fileDiscoveryProperties = loadProperties(fileDiscoveryPropertyFile);
             //load Properties from database instead
@@ -106,6 +106,7 @@ public class DataDefender  {
             return;
         }
 
+        log.info("Checking backend configuration file [backend.properties]...");
         errors = PropertyCheck.checkDtabaseProperties();
         if (errors.size() >0) {
             displayErrors(errors);
@@ -113,45 +114,60 @@ public class DataDefender  {
         }
         //final Properties props = loadProperties(line.getOptionValue('P', "db.properties"));
         //Load data from the database
-        final Properties props = loadPropertiesDBRepository();
         
+       
+        log.info("Checking backend properties data [database]...");
+        final Properties props = loadPropertiesDBRepository();
+       
         try (final IDBFactory dbFactory = IDBFactory.get(props);) {
+            
             switch (cmd) {
                 case "database-discovery":
                     if (line.hasOption('c')) {
-                        errors = PropertyCheck.check(cmd, 'c');
-                        if (errors.size() >0) {
-                            displayErrors(errors);
-                            return;
-                        }
+                        //errors = PropertyCheck.check(cmd, 'c');
+                        //if (errors.size() >0) {
+                         //   displayErrors(errors);
+                         //   return;
+                        //}
+
+                        // Column discovery read REGEX
                         final String columnPropertyFile = line.getOptionValue('C', "columndiscovery.properties");
                         final Properties columnProperties = loadProperties(columnPropertyFile);
                         final ColumnDiscoverer discoverer = new ColumnDiscoverer();
                         discoverer.discover(dbFactory, columnProperties, getTableNames(unparsedArgs, columnProperties));
-                        if (line.hasOption('r')) {
-                            discoverer.createRequirement(line.getOptionValue('R', "Sample-Requirement.xml"));
-                        }
-                    } else if (line.hasOption('d')) {
-                        errors = PropertyCheck.check(cmd, 'd');
-                        if (errors.size() >0) {
-                            displayErrors(errors);
-                            return;
-                        } 
+                        // useless
+                        //if (line.hasOption('r')) {
+                        //    discoverer.createRequirement(line.getOptionValue('R', "Sample-Requirement.xml"));
+                       // }
+                    } 
+                    
+                    else if (line.hasOption('d')) {
+                        //errors = PropertyCheck.check(cmd, 'd');
+                        //if (errors.size() >0) {
+                         //   displayErrors(errors);
+                         //   return;
+                      //  } 
                         
+                        // Default option (database discovery -d )
+                        // Redatasense 3.0
+
                         //final String datadiscoveryPropertyFile = line.getOptionValue('D', "datadiscovery.properties");
                         final Properties dataDiscoveryProperties = loadPropertiesFromDB("DATADISCOVERY_PROPERTIES");
                         //final Properties dataDiscoveryProperties = loadProperties(datadiscoveryPropertyFile);
                         final DatabaseDiscoverer discoverer = new DatabaseDiscoverer();
                         discoverer.discover(dbFactory, dataDiscoveryProperties, getTableNames(unparsedArgs, dataDiscoveryProperties));
-                        if (line.hasOption('r')) {
-                            discoverer.createRequirement(line.getOptionValue('R', "Sample-Requirement.xml"));
-                        }
+                        
+                        //if (line.hasOption('r')) {
+                        //    discoverer.createRequirement(line.getOptionValue('R', "Sample-Requirement.xml"));
+                        //}
                     }
                     break;
                 default:
                     help(options);
                     break;
             }
+     
+
         }
 
         final long endTime   = System.currentTimeMillis();
@@ -188,11 +204,11 @@ public class DataDefender  {
         final Options options = new Options();
         options.addOption("h", "help", false, "display help");
         options.addOption("c", "columns", false, "discover candidate column names for anonymization based on provided patterns");
-        options.addOption("C", "column-properties", true, "define column property file");
+        //options.addOption("C", "column-properties", true, "define column property file");
         options.addOption("d", "data", false, "discover candidate column for anonymization based on semantic algorithms");
-        options.addOption("D", "data-properties", true, "discover candidate column for anonymization based on semantic algorithms");
-        options.addOption("P", "database properties", true, "define database property file");
-        options.addOption("F", "file discovery properties", true, "define file discovery property file");
+        //options.addOption("D", "data-properties", true, "discover candidate column for anonymization based on semantic algorithms");
+        //options.addOption("P", "database properties", true, "define database property file");
+        //options.addOption("F", "file discovery properties", true, "define file discovery property file");
         options.addOption("debug", false, "enable debug output");
         return options;
     }
