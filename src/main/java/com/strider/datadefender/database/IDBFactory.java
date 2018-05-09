@@ -1,6 +1,6 @@
 /*
  * 
- * Copyright 2014, Armenak Grigoryan, and individual contributors as indicated
+ * Copyright 2017, Armenak Grigoryan & Redglue team, and individual contributors as indicated
  * by the @authors tag. See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -30,10 +30,12 @@ import com.strider.datadefender.database.metadata.IMetaData;
 import com.strider.datadefender.database.metadata.MSSQLMetaData;
 import com.strider.datadefender.database.metadata.MySQLMetaData;
 import com.strider.datadefender.database.metadata.OracleMetaData;
+import com.strider.datadefender.database.metadata.PostgreSQLMetadata;
 import com.strider.datadefender.database.sqlbuilder.ISQLBuilder;
 import com.strider.datadefender.database.sqlbuilder.MSSQLSQLBuilder;
 import com.strider.datadefender.database.sqlbuilder.MySQLSQLBuilder;
 import com.strider.datadefender.database.sqlbuilder.OracleSQLBuilder;
+import com.strider.datadefender.database.sqlbuilder.PostgreSqlBuilder;
 import com.strider.datadefender.utils.ICloseableNoException;
 
 /**
@@ -144,6 +146,21 @@ public interface IDBFactory extends ICloseableNoException {
                 @Override
                 public ISQLBuilder createSQLBuilder() {
                     return new OracleSQLBuilder(dbProps);
+                }
+            };
+        } else if ("postgresql".equalsIgnoreCase(vendor)) {
+            return new DBFactory(vendor) {
+                @Override
+                public Connection createConnection() throws DatabaseAnonymizerException {
+                    return new PostgreSQLDBConnection(dbProps).connect();
+                }
+                @Override
+                public IMetaData fetchMetaData() throws DatabaseAnonymizerException {
+                    return new PostgreSQLMetadata(dbProps, getConnection());
+                }
+                @Override
+                public ISQLBuilder createSQLBuilder() {
+                    return new PostgreSqlBuilder(dbProps);
                 }
             };
         }

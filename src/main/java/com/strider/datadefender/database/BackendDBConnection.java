@@ -125,28 +125,30 @@ public class BackendDBConnection {
     }
 
 
-    public void insertDataDiscoveryRow (Connection dbConnection, String RunID, Timestamp now, String columnName, Double Probability, String Model, String ModelMode, String Dictionary, Integer numRows, Double score, String sampleData)
+    public void insertDataDiscoveryRow (Connection dbConnection, String RunID, Timestamp now, String schemaName, String TableName, String columnName, Double Probability, String Model, String ModelMode, String Dictionary, Integer numRows, Double score, String sampleData)
     {
          
        
         
         try {
         String insertTableSQL = "INSERT INTO REDATASENSE.DATA_RESULTS"
-		+ "(`ID_DB`, `RUN_ID`, `RUN_TIMESTAMP`, `COLUMN_NAME`, `PROBABILITY`, `MODEL`, `MODELMODE`, `DICTIONARY`, `NUM_ROWS`, `SCORE`, `SAMPLE_DATA`) VALUES "
-        + "((select max(ID_DB) from REDATASENSE.DB_PROPERTIES where ISACTIVE=1),?,?,?,?,?,?,?,?,?,?)";
+		+ "(`ID_DB`, `RUN_ID`, `RUN_TIMESTAMP`, `SCHEMA_NAME`, `TABLE_NAME`, `COLUMN_NAME`, `PROBABILITY`, `MODEL`, `MODELMODE`, `DICTIONARY`, `NUM_ROWS`, `SCORE`, `SAMPLE_DATA`) VALUES "
+        + "((select max(ID_DB) from REDATASENSE.DB_PROPERTIES where ISACTIVE=1),?,?,?,?,?,?,?,?,?,?,?,?)";
 
     dbConnection.setAutoCommit(false);
     PreparedStatement preparedStatement = dbConnection.prepareStatement(insertTableSQL);
     preparedStatement.setString(1, RunID);
     preparedStatement.setTimestamp(2, now);
-    preparedStatement.setString(3, columnName);
-    preparedStatement.setDouble(4, Probability);
-    preparedStatement.setString(5, Model);
-    preparedStatement.setString(6, ModelMode);
-    preparedStatement.setString(7, Dictionary);
-    preparedStatement.setInt(8, numRows);
-    preparedStatement.setDouble(9, score);
-    preparedStatement.setString(10, sampleData);
+    preparedStatement.setString(3, schemaName);
+    preparedStatement.setString(4, TableName);
+    preparedStatement.setString(5, columnName);
+    preparedStatement.setDouble(6, Probability);
+    preparedStatement.setString(7, Model);
+    preparedStatement.setString(8, ModelMode);
+    preparedStatement.setString(9, Dictionary);
+    preparedStatement.setInt(10, numRows);
+    preparedStatement.setDouble(11, score);
+    preparedStatement.setString(12, sampleData);
 
     
     // execute insert SQL stetement

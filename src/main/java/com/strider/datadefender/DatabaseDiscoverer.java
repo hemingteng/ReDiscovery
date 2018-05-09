@@ -189,10 +189,10 @@ public class DatabaseDiscoverer extends Discoverer {
       
             log.info("Writing to database the list of suspects...");
             if (calculate_score.equals("yes")) { 
-            backendDB.insertDataDiscoveryRow(dbc, randomUUIDString, now, data.getColumnName(), data.getAverageProbability(), data.getModel(), data.getModelMode(), data.getDictionariesFound(),rowCount, Double.parseDouble(score.columnScore(rowCount)), String.join("", SampleData));
+            backendDB.insertDataDiscoveryRow(dbc, randomUUIDString, now, data.getSchemaName(), data.getColumnName(), data.getColumnName(), data.getAverageProbability(), data.getModel(), data.getModelMode(), data.getDictionariesFound(),rowCount, Double.parseDouble(score.columnScore(rowCount)), String.join("", SampleData));
             }
             else{
-            backendDB.insertDataDiscoveryRow(dbc, randomUUIDString, now, data.getColumnName(), data.getAverageProbability(), data.getModel(), data.getModelMode(), data.getDictionariesFound(),0, 0.0, String.join(";", SampleData));                    
+            backendDB.insertDataDiscoveryRow(dbc, randomUUIDString, now, data.getSchemaName(), data.getColumnName(), data.getColumnName(), data.getAverageProbability(), data.getModel(), data.getModelMode(), data.getDictionariesFound(),0, 0.0, String.join(";", SampleData));                    
 
             }
 
