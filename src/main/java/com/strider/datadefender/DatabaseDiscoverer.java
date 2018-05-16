@@ -100,6 +100,8 @@ public class DatabaseDiscoverer extends Discoverer {
         final double probabilityThreshold = parseDouble(dataDiscoveryProperties.getProperty("probability_threshold"));
         final String calculate_score = dataDiscoveryProperties.getProperty("score_calculation");
         final String NERModel = dataDiscoveryProperties.getProperty("NERmodel");
+        
+
 
         // Initialize Data Connection to Store the results
         // Version 3.0 - Redatasense
@@ -189,10 +191,10 @@ public class DatabaseDiscoverer extends Discoverer {
       
             log.info("Writing to database the list of suspects...");
             if (calculate_score.equals("yes")) { 
-            backendDB.insertDataDiscoveryRow(dbc, randomUUIDString, now, data.getSchemaName(), data.getColumnName(), data.getColumnName(), data.getAverageProbability(), data.getModel(), data.getModelMode(), data.getDictionariesFound(),rowCount, Double.parseDouble(score.columnScore(rowCount)), String.join("", SampleData));
+            backendDB.insertDataDiscoveryRow(dbc, randomUUIDString, now, data.getSchemaName(), data.getTableName(), data.getColumnName(), data.getAverageProbability(), data.getModel(), data.getModelMode(), data.getDictionariesFound(),rowCount, Double.parseDouble(score.columnScore(rowCount)), String.join("", SampleData));
             }
             else{
-            backendDB.insertDataDiscoveryRow(dbc, randomUUIDString, now, data.getSchemaName(), data.getColumnName(), data.getColumnName(), data.getAverageProbability(), data.getModel(), data.getModelMode(), data.getDictionariesFound(),0, 0.0, String.join(";", SampleData));                    
+            backendDB.insertDataDiscoveryRow(dbc, randomUUIDString, now, data.getSchemaName(), data.getTableName(), data.getColumnName(), data.getAverageProbability(), data.getModel(), data.getModelMode(), data.getDictionariesFound(),0, 0.0, String.join(";", SampleData));                    
 
             }
 
@@ -303,7 +305,6 @@ public class DatabaseDiscoverer extends Discoverer {
         String getRegexType = "N/A";
 
         //findersDict = getDictionariesFileForSearch(dictionaryPathList, nodeDict);
-
         for(final MatchMetaData data: map) {
             final String tableName = data.getTableName();
             final String columnName = data.getColumnName();
@@ -327,6 +328,31 @@ public class DatabaseDiscoverer extends Discoverer {
                     continue;
                 }
             }
+
+            // Skip table action
+            final String[] SkipTablesName = dataDiscoveryProperties.getProperty("skip_tables_name").split(",");
+            String toIgnoreTable = "";
+            
+            for (String t: SkipTablesName) {           
+                //Do your stuff here
+                if (tableName.equalsIgnoreCase(t)) {
+                    //log.info("Adding table to ignore list: [" + tableName + "]");
+                    toIgnoreTable=tableName;
+                    break;
+                }
+                else toIgnoreTable = "no_tables";
+            }
+
+            if (!toIgnoreTable.equals("no_tables"))
+            {
+                log.info("Warning: Ignoring this table: [" + toIgnoreTable + "]");
+                continue;
+            }
+                
+
+           
+
+
 
             final String table = sqlBuilder.prefixSchema(tableName);
             final int limit = Integer.parseInt(dataDiscoveryProperties.getProperty("limit"));

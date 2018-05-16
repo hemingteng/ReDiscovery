@@ -25,6 +25,7 @@ COMMIT;
 INSERT INTO redatasense.DATADISCOVERY_PROPERTIES (`RKEY`, `RVALUE`) VALUES ('probability_threshold','0.6');
 INSERT INTO redatasense.DATADISCOVERY_PROPERTIES (`RKEY`, `RVALUE`) VALUES ('model_generic','pt-ner-multi.bin');
 INSERT INTO redatasense.DATADISCOVERY_PROPERTIES (`RKEY`, `RVALUE`) VALUES ('tokens','en-token.bin');
+INSERT INTO redatasense.DATADISCOVERY_PROPERTIES (`RKEY`, `RVALUE`) VALUES ('skip_tables_name','MYTABLE_TO_IGNORE');
 INSERT INTO redatasense.DATADISCOVERY_PROPERTIES (`RKEY`, `RVALUE`) VALUES ('limit','1000');
 INSERT INTO redatasense.DATADISCOVERY_PROPERTIES (`RKEY`, `RVALUE`) VALUES ('threshold_count','6');
 INSERT INTO redatasense.DATADISCOVERY_PROPERTIES (`RKEY`, `RVALUE`) VALUES ('threshold_highrisk','3');
