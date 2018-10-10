@@ -124,11 +124,12 @@
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
-                    <finalName>RedataSense</finalName>
+                    <finalName>RedataSense-4.0</finalName>
                     <appendAssemblyId>false</appendAssemblyId>
                     <archive>
                         <manifest>
-                            <mainClass>com.strider.DataDefender</mainClass>
+                            <addClasspath>true</addClasspath>
+                            <mainClass>com.strider.datadefender.DataDefender</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
@@ -151,21 +152,6 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>2.12.4</version>
             </plugin>
-			<plugin>
-			  <!-- Build an executable JAR -->
-			  <groupId>org.apache.maven.plugins</groupId>
-			  <artifactId>maven-jar-plugin</artifactId>
-			  <version>3.1.0</version>
-			  <configuration>
-				<archive>
-				  <manifest>
-					<addClasspath>true</addClasspath>
-					<classpathPrefix>lib/</classpathPrefix>
-					<mainClass>com.strider.datadefender.DataDefender</mainClass>
-				  </manifest>
-				</archive>
-			  </configuration>
-			</plugin>
         </plugins>
     </build>
 
