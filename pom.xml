@@ -4,7 +4,7 @@
 
     <groupId>com.redatasense</groupId>
     <artifactId>RedataSense</artifactId>
-    <version>3.1</version>
+    <version>4.0</version>
     <packaging>jar</packaging>
 
     <name>RedataSense</name>
@@ -59,7 +59,7 @@
     </profiles>
 
     <properties>
-        <!--<maven.test.skip>false</maven.test.skip>-->
+        <maven.test.skip>true</maven.test.skip>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <sonar.projectKey>DD</sonar.projectKey>
         <execAppDir>${basedir}/exec-app-dir</execAppDir>
