@@ -20,6 +20,7 @@ package com.strider.datadefender;
 import static java.util.regex.Pattern.compile;
 import static org.apache.log4j.Logger.getLogger;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -56,7 +57,7 @@ public class ColumnDiscoverer extends Discoverer {
     private static final Logger log = getLogger(ColumnDiscoverer.class);
 
     public List<MatchMetaData> discover(final IDBFactory factory, final Properties columnProperties, final Set<String> tables)
-        throws DatabaseAnonymizerException {
+        throws DatabaseAnonymizerException, IOException {
 
         log.info("Column discovery in process");
         final IMetaData metaData = factory.fetchMetaData();

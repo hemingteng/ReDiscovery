@@ -90,7 +90,7 @@ public final class AppProperties {
         }
     }
 
-    public static Properties loadPropertiesFromDB(String PropertiesTablename) throws DataDefenderException {
+    public static Properties loadPropertiesFromDB(String PropertiesTablename) throws DataDefenderException, IOException{
         BackendDBConnection backendDB = new BackendDBConnection();
         Connection dbc = backendDB.connect();
         final Properties properties = new Properties();
@@ -116,7 +116,7 @@ public final class AppProperties {
         }
     }
 
-    public static Properties loadPropertiesDBRepository() throws DataDefenderException {
+    public static Properties loadPropertiesDBRepository() throws DataDefenderException, IOException {
         BackendDBConnection backendDB = new BackendDBConnection();
         Connection dbc = backendDB.connect();
         final Properties pp = new Properties();

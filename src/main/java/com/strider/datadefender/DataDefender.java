@@ -216,7 +216,7 @@ public class DataDefender  {
     /**
      * Displays command-line help options
      *
-     * @param Options
+     * @param options
      */
     private static void help(final Options options) {
         final HelpFormatter formatter = new HelpFormatter();

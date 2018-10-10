@@ -115,7 +115,6 @@ public abstract class Discoverer { //implements IDiscoverer {
         } catch (IOException ex) {
             log.error(ex.toString());
         }
-
         return new Model(tokenizer, nameFinder, modelName);
     }
 }

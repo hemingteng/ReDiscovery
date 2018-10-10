@@ -21,18 +21,14 @@ package com.strider.datadefender;
 import static java.lang.Double.parseDouble;
 import static org.apache.log4j.Logger.getLogger;
 
+import java.sql.*;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
-import java.util.Arrays;
+import java.util.*;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import org.apache.commons.io.FileUtils;
-import java.sql.PreparedStatement;
-
 
 import org.apache.commons.collections.ListUtils;
 import org.apache.log4j.Logger;
@@ -45,34 +41,17 @@ import org.xml.sax.SAXException;
 import opennlp.tools.util.Span;
 
 import com.strider.datadefender.file.metadata.FileMatchMetaData;
-import com.strider.datadefender.utils.CommonUtils;
-import java.util.Collections;
+
 import opennlp.tools.dictionary.Dictionary;
 import opennlp.tools.namefind.DictionaryNameFinder;
 import opennlp.tools.namefind.RegexNameFinder;
-import opennlp.tools.namefind.TokenNameFinderModel;
 import opennlp.tools.namefind.TokenNameFinder;
 
-import opennlp.tools.util.StringList;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.regex.Pattern;
-import java.util.LinkedHashSet;
-import java.util.Vector;
-import java.util.Enumeration;
-import opennlp.tools.tokenize.SimpleTokenizer;
-
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
 
 import com.strider.datadefender.database.BackendDBConnection;
-import com.strider.datadefender.database.DBConnection;
-import java.util.UUID;
 
-import static com.strider.datadefender.utils.AppProperties.loadPropertiesFromDB;
 import static com.strider.datadefender.utils.AppProperties.loadProperties;
-
 
 /**
  *
@@ -87,7 +66,7 @@ public class FileDiscoverer extends Discoverer {
 
     @SuppressWarnings("unchecked")
     public List<FileMatchMetaData> discover(final Properties dataDiscoveryProperties)
-    throws AnonymizerException, IOException, SAXException, TikaException, NullPointerException, Exception {
+            throws AnonymizerException, IOException, SAXException, TikaException, NullPointerException, Exception {
         log.info("Data discovery in process");
 
         // Initialize Data Connection to Store the results
@@ -99,7 +78,6 @@ public class FileDiscoverer extends Discoverer {
         UUID uuid = UUID.randomUUID();
         String randomUUIDString = uuid.toString();
         java.sql.Timestamp now = new java.sql.Timestamp(new java.util.Date().getTime());
-        
 
         // Get the probability threshold from property file
         final double probabilityThreshold = parseDouble(dataDiscoveryProperties.getProperty("probability_threshold"));
@@ -111,7 +89,7 @@ public class FileDiscoverer extends Discoverer {
         log.info("Model list [" + Arrays.toString(modelList) + "]");
 
         List<FileMatchMetaData> finalList = new ArrayList<>();
-        for (String model: modelList) {         
+        for (String model: modelList) {
             log.info("Processing model: " + model);
             final Model modelPerson = createModel(dataDiscoveryProperties, model);
             fileMatches = discoverAgainstSingleModel(dataDiscoveryProperties, modelPerson, probabilityThreshold);
@@ -124,22 +102,23 @@ public class FileDiscoverer extends Discoverer {
 
         for(final FileMatchMetaData data: finalList) {
             final String probability = decimalFormat.format(data.getAverageProbability());
-            
             if (data.getDictionariesFoundList().isEmpty())
             {
-              backendDB.insertFileResultRow(dbc, randomUUIDString, now, data.getDirectory(), data.getFileName(), probability, data.getModel(), data.getModelMode(), data.getDictionariesFound());
+                backendDB.insertFileResultRow(dbc, randomUUIDString, now, data.getDirectory(), data.getFileName(),
+                        probability, data.getModel(), data.getModelMode(), data.getDictionariesFound());
             }
             else {
-              // For each classification/dictionary write a line
-            for (String classificator: data.getDictionariesFoundList()) {
-            //if classificator == null 
-            backendDB.insertFileResultRow(dbc, randomUUIDString, now, data.getDirectory(), data.getFileName(), probability, data.getModel(), data.getModelMode(), classificator);
+                // For each classification/dictionary write a line
+                for (String classificator: data.getDictionariesFoundList()) {
+                    //if classificator == null
+                    backendDB.insertFileResultRow(dbc, randomUUIDString, now, data.getDirectory(), data.getFileName(),
+                            probability, data.getModel(), data.getModelMode(), classificator);
+                }
             }
-          }
 
             //final String result = String.format("%s,%s,%s,%s,[%s]", data.getDirectory(), data.getFileName(), probability, data.getModel(), data.getDictionariesFound());
             //log.info(result);
-            
+
         }
         log.info("Writing to database the list of suspects...");
         dbc.commit();
@@ -151,28 +130,29 @@ public class FileDiscoverer extends Discoverer {
     // Task: function to getAllDictionaries and return a List of TokenNameFinders to feed the model
 
     private List<TokenNameFinder> getDictionariesFileForSearch(String[] dictionaryPathList, File nodeDict)
-      throws IOException
+            throws IOException
     {
-      List<TokenNameFinder> findersDict = new ArrayList<>();
-    // add all dictionaries
-      for (final String dictPath: dictionaryPathList) {
-        nodeDict = new File(dictPath);
-        final InputStream Dictstream = new FileInputStream(dictPath);
+        List<TokenNameFinder> findersDict = new ArrayList<>();
+        // add all dictionaries
+        for (final String dictPath: dictionaryPathList) {
+            nodeDict = new File(dictPath);
+            final InputStream Dictstream = new FileInputStream(dictPath);
 
-        log.info("Dictionary considered for analysis: " + dictPath);
-        Dictionary rawdict = new Dictionary(Dictstream);
-        //DictionaryNameFinder dictionaryNER = new DictionaryNameFinder(rawdict, nodeDict.getName().replaceFirst("[.][^.]+$", ""););
+            log.info("Dictionary considered for analysis: " + dictPath);
+            Dictionary rawdict = new Dictionary(Dictstream);
+            //DictionaryNameFinder dictionaryNER = new DictionaryNameFinder(rawdict, nodeDict.getName().replaceFirst("[.][^.]+$", ""););
 
-        findersDict.add(new DictionaryNameFinder(rawdict, nodeDict.getName().replaceAll("\\.\\w+", "")));
+            findersDict.add(new DictionaryNameFinder(rawdict, nodeDict.getName().replaceAll("\\.\\w+", "")));
 
 
 
+        }
+        return findersDict;
     }
-    return findersDict;
-  }
 
-    private List<FileMatchMetaData> discoverAgainstSingleModel(final Properties fileDiscoveryProperties, final Model model, final double probabilityThreshold)
-    throws AnonymizerException, IOException, SAXException, TikaException, NullPointerException, Exception {
+    private List<FileMatchMetaData> discoverAgainstSingleModel(final Properties fileDiscoveryProperties,
+                                                               final Model model, final double probabilityThreshold)
+            throws AnonymizerException, IOException, SAXException, TikaException, NullPointerException, Exception {
         // Start running NLP algorithms for each column and collect percentage
         fileMatches = new ArrayList<>();
         String[] directoryList = null;
@@ -216,25 +196,25 @@ public class FileDiscoverer extends Discoverer {
 
 
 
-      //final InputStream Dictstream = new FileInputStream(dictionaryPath);
-      //log.info("Dictionary considered for analysis: " + dictionaryPath);
+        //final InputStream Dictstream = new FileInputStream(dictionaryPath);
+        //log.info("Dictionary considered for analysis: " + dictionaryPath);
 
-      //Dictionary rawdict = new Dictionary(Dictstream);
-      //log.info("Loading dictionaries...");
+        //Dictionary rawdict = new Dictionary(Dictstream);
+        //log.info("Loading dictionaries...");
 
-    //  List<TokenNameFinder> findersDict = new ArrayList<>();
-    // add all dictionaries
-    //  for (final String dictPath: dictionaryPathList) {
-  //      nodeDict = new File(dictPath);
-  //      final InputStream Dictstream = new FileInputStream(dictPath);
+        //  List<TokenNameFinder> findersDict = new ArrayList<>();
+        // add all dictionaries
+        //  for (final String dictPath: dictionaryPathList) {
+        //      nodeDict = new File(dictPath);
+        //      final InputStream Dictstream = new FileInputStream(dictPath);
 
-    //    log.info("Dictionary considered for analysis: " + dictPath);
-    //    Dictionary rawdict = new Dictionary(Dictstream);
+        //    log.info("Dictionary considered for analysis: " + dictPath);
+        //    Dictionary rawdict = new Dictionary(Dictstream);
         //DictionaryNameFinder dictionaryNER = new DictionaryNameFinder(rawdict, nodeDict.getName().replaceFirst("[.][^.]+$", ""););
 
-    //    findersDict.add(new DictionaryNameFinder(rawdict, nodeDict.getName().replaceAll("\\.\\w+", "")));
+        //    findersDict.add(new DictionaryNameFinder(rawdict, nodeDict.getName().replaceAll("\\.\\w+", "")));
 
-    //  }
+        //  }
 
         log.info("File types considered for analysis: " + inclusions);
         log.info("Directories for analysis: " + directories);
@@ -243,151 +223,124 @@ public class FileDiscoverer extends Discoverer {
             log.info("Listing files. Please wait...");
             node = new File(directory);
             final List<File> files = (List<File>) FileUtils.listFiles(node, inclusionList, true);
+            log.info("Files to look for - >" + files);
+
 
             for (final File fich : files) {
-                  final String file = fich.getName().toString();
-                  final String recursivedir = fich.getParent().toString();
+                final String file = fich.getName().toString();
+                final String recursivedir = fich.getParent().toString();
 
-                    if (Arrays.asList(files_excludedList).contains(file)) {
-                        log.info("Ignoring [" + fich.getCanonicalPath() + "]");
-                        continue;
-                      }
+                if (Arrays.asList(files_excludedList).contains(file)) {
+                    log.info("Ignoring [" + fich.getCanonicalPath() + "]");
+                    continue;
+                }
 
-                      log.info("Analyzing [" + fich.getCanonicalPath() + "]");
+                log.info("Analyzing [" + fich.getCanonicalPath() + "]");
 
-                    final BodyContentHandler handler = new BodyContentHandler(-1);
+                final BodyContentHandler handler = new BodyContentHandler(-1);
 
-                    final AutoDetectParser parser = new AutoDetectParser();
-                    metadata = new Metadata();
-                    String handlerString = "";
-                    try  {
+                final AutoDetectParser parser = new AutoDetectParser();
+                metadata = new Metadata();
+                String handlerString = "";
+                try {
                     final InputStream stream = new FileInputStream(fich.getCanonicalPath());
-                        if (stream != null) {
-                            parser.parse(stream, handler, metadata);
-                            handlerString =  handler.toString();
+                    if (stream != null) {
+                        parser.parse(stream, handler, metadata);
+                        handlerString = handler.toString();
 
-                        }
                     }
-                    catch (IOException e) {
-                      log.info("Unable to read " + fich.getCanonicalPath() +".Ignoring...");
-                      }
-                    catch (Throwable npe) {
-                        log.info("File error or not supported " + fich.getCanonicalPath() +".Ignoring...");
-                        continue;
-                        }
+                } catch (IOException e) {
+                    log.info("Unable to read " + fich.getCanonicalPath() + ".Ignoring...");
+                } catch (Throwable npe) {
+                    log.info("File error or not supported " + fich.getCanonicalPath() + ".Ignoring...");
+                    continue;
+                }
 
-                    try {
+                try {
                     final FileMatchMetaData result = new FileMatchMetaData(recursivedir, file);
 
-                    switch (NERModel) {
+                    switch (NERModel.toLowerCase()) {
 
-                      case "NERDictionary":
-                        log.info ("**** NERDictionary mode: on *** ");
-                        DictionariesFound = new ArrayList<String>();
-                        log.info("Loading Dictionaries..Please wait");
-                        findersDict = getDictionariesFileForSearch(dictionaryPathList, nodeDict);
+                        case "nerdictionary":
+                            averageProbability = applyNERDictionary(dictionaryPathList, nodeDict, handlerString,
+                                    handler, model);
+                            break;
 
-                        log.debug("Content: " + handlerString);
-                        probabilityListDict = new ArrayList<>();
-                        final String tokensDict[] = model.getTokenizer().tokenize(handler.toString());
-
-                        log.info("Applying Dictionary model...");
-                        //final Span DictSpansOnly[] = dictionaryNER.find(tokensDict);
-                        for (TokenNameFinder dictionaryNER : findersDict) {
-                          final Span DictSpansOnly[] = dictionaryNER.find(tokensDict);
-                        for( int i = 0; i < DictSpansOnly.length; i++)
-                        {
-                            DictionariesFound.add(DictSpansOnly[i].getType());
-                            //DictionariesFound.add(DictSpansOnly[i].getType()); // not working - Ad all
-                            log.debug("Dictionary:" + DictSpansOnly[i].getType() + "," + tokensDict[DictSpansOnly[i].getStart()]);
-                            probabilityListDict.add(new Probability(tokensDict[DictSpansOnly[i].getStart()], 0.99));
-                        }
-
-                        dictionaryNER.clearAdaptiveData();
-                        averageProbability = calculateAverage(probabilityListDict);
+                        case "nerentropy":
+                            averageProbability = applyNEREntropy(handlerString, model, handler);
+                            break;
 
 
-                      }
+                        // REGEX OpenNLP implementation;
+                        case "nerregex":
+                            // averageProbability = applyNERRegex(handlerString, model, handler);
+                            log.info ("**** NERRegex mode: on *** ");
+                            DictionariesFound = new ArrayList<String>();
+                            final Properties RegexProperties = loadProperties("regex.properties");
+                            log.info("PROPERTIES ---------------->" + RegexProperties);
+                            log.info("Tokenizing for file is starting...");
+                            log.debug("Content: " + handlerString);
+                            probabilityListRegex = new ArrayList<>();
+                            final String tokensRegex[] = model.getTokenizer().tokenize(handler.toString());
+                            //final List<String> suspList = new ArrayList(RegexProperties.keySet());
+                            //matches = new ArrayList<>();
+                            //Pattern[] patterns = new Pattern[];
+                            log.info("Applying REGEX model for sensitive data...");
+                            //Pattern[] patterns = suspList.stream().map(Pattern::compile).toArray(Pattern[]::new);
+                            Enumeration<?> enumeration = RegexProperties.propertyNames();
+                            Map<String, Pattern[]> regexMap = new HashMap<>();
 
-                      break;
-
-
-                    case "NEREntropy":
-                    log.info ("**** NEREntropy mode: on *** ");
-                    DictionariesFound = new ArrayList<String>();
-                    log.debug("Tokenizing for file is starting...");
-                    log.debug("Content: " + handlerString);
-                    final String tokens[] = model.getTokenizer().tokenize(handler.toString());
-
-                    final Span nameSpans[] = model.getNameFinder().find(tokens);
-                    final double[] spanProbs = model.getNameFinder().probs(nameSpans);
-
-                    //display names
-                    probabilityList = new ArrayList<>();
-
-                    log.info("Comparing results...");
-                    for( int i = 0; i < nameSpans.length; i++) {
-                          log.info("Probability is: "+spanProbs[i] +" for text: " + tokens[nameSpans[i].getStart()]);
-                          probabilityList.add(new Probability(tokens[nameSpans[i].getStart()], spanProbs[i]));
-
-                    }
-                    //DictionariesFound.add(nameSpans[i].getType());
-                    model.getNameFinder().clearAdaptiveData();
-                    averageProbability = calculateAverage(probabilityList);
-                    break;
-
-
-
-                    // REGEX OpenNLP implementation;
-                    case "NERRegex":
-                      log.info ("**** NERRegex mode: on *** ");
-                      DictionariesFound = new ArrayList<String>();
-                      final Properties RegexProperties = loadProperties("regex.properties");
-                      log.info("Tokenizing for file is starting...");
-                      log.debug("Content: " + handlerString);
-                      probabilityListRegex = new ArrayList<>();
-                      final String tokensRegex[] = model.getTokenizer().tokenize(handler.toString());
-                      //final List<String> suspList = new ArrayList(RegexProperties.keySet());
-                      //matches = new ArrayList<>();
-                      //Pattern[] patterns = new Pattern[];
-                      log.info("Applying REGEX model for sensitive data...");
-                      //Pattern[] patterns = suspList.stream().map(Pattern::compile).toArray(Pattern[]::new);
-                      Enumeration<?> enumeration = RegexProperties.propertyNames();
-                      Map<String, Pattern[]> regexMap = new HashMap<>();
-
-                      while (enumeration.hasMoreElements()) {
-                        String key = (String) enumeration.nextElement();
-                        String value = RegexProperties.getProperty(key);
-                        Pattern ptregex = Pattern.compile(value);
-                        Pattern[] ptterns = new Pattern[]{ptregex};
-                        //Map<String, Pattern[]> regexMap = new HashMap<>();
-                        regexMap.put(key, ptterns);
-                        }
-
-                      RegexNameFinder finder = new RegexNameFinder(regexMap);
-                      Span[] resultRegex = finder.find(tokensRegex);
-
-                      log.info("Evaluating Regex results...");
-                      //final String RegexSpam = Arrays.toString(Span.spansToStrings(resultRegex, tokensRegex));
-                      String getRegexType = "N/A";
-                      for( int i = 0; i < resultRegex.length; i++) {
-                            getRegexType = resultRegex[i].getType();
-                            log.debug("Found Type text: " + getRegexType);
-                            DictionariesFound.add(getRegexType);
-                            // default regex probability is 99% always
-                            //log.info("Regex for text: " + tokensRegex[resultRegex[i].getStart()]);
-                            log.debug("Found identifier text: " + tokensRegex[resultRegex[i].getStart()]);
-                            probabilityListRegex.add(new Probability(tokensRegex[resultRegex[i].getStart()], 0.99));
+                            while (enumeration.hasMoreElements()) {
+                                String key = (String) enumeration.nextElement();
+                                String value = RegexProperties.getProperty(key);
+                                Pattern ptregex = Pattern.compile(value);
+                                Pattern[] ptterns = new Pattern[]{ptregex};
+                                //Map<String, Pattern[]> regexMap = new HashMap<>();
+                                regexMap.put(key, ptterns);
                             }
 
-                      finder.clearAdaptiveData();
-                      averageProbability = calculateAverage(probabilityListRegex);
-                      //result.setAverageProbability(averageProbability);
-                      //result.setDictionariesFound(DictionariesFoundRegex);
-                      break;
+                            RegexNameFinder finder = new RegexNameFinder(regexMap);
+                            Span[] resultRegex = finder.find(tokensRegex);
 
-                  }
+                            log.info("Evaluating Regex results...");
+                            //final String RegexSpam = Arrays.toString(Span.spansToStrings(resultRegex, tokensRegex));
+                            String getRegexType = "N/A";
+                            for( int i = 0; i < resultRegex.length; i++) {
+                                getRegexType = resultRegex[i].getType();
+                                log.debug("Found Type text: " + getRegexType);
+                                DictionariesFound.add(getRegexType);
+                                // default regex probability is 99% always
+                                //log.info("Regex for text: " + tokensRegex[resultRegex[i].getStart()]);
+                                log.debug("Found identifier text: " + tokensRegex[resultRegex[i].getStart()]);
+                                probabilityListRegex.add(new Probability(tokensRegex[resultRegex[i].getStart()], 0.99));
+                            }
 
+                            finder.clearAdaptiveData();
+                            averageProbability = calculateAverage(probabilityListRegex);
+                            //result.setAverageProbability(averageProbability);
+                            //result.setDictionariesFound(DictionariesFoundRegex);
+                            break;
+
+                        case "all":
+                            ArrayList<Double> allProbs = new ArrayList<>();
+
+                            allProbs.add(applyNERDictionary(dictionaryPathList, nodeDict, handlerString, handler,
+                                    model));
+                            allProbs.add(applyNEREntropy(handlerString, model, handler));
+                            //allProbs.add(applyNERRegex(handlerString, model, handler));
+
+                            double sum = 0.0;
+                            if(!allProbs.isEmpty()){
+                                for(Double prob : allProbs){
+
+                                }
+                                ;
+                            }
+
+
+                            break;
+
+                    }
 
 
                     if ((averageProbability >= probabilityThreshold)) {
@@ -398,17 +351,139 @@ public class FileDiscoverer extends Discoverer {
                         result.setDictionariesFound(DictionariesFound);
                         fileMatches.add(result);
                     }
-                  }
-                  catch (NullPointerException npe) {
-                      npe.printStackTrace(System.out);
-                      log.info("NameFinder Model can't be applied to " + fich.getCanonicalPath() +".Ignoring...");
-                      }
 
+                } catch (NullPointerException npe) {
+                    npe.printStackTrace(System.out);
+                    log.info("NameFinder Model can't be applied to " + fich.getCanonicalPath() + ".Ignoring...");
                 }
+
+            }
+        }
+        return fileMatches;
+    }
+
+    private double applyNERDictionary(String[] dictionaryPathList, File nodeDict, String handlerString,
+                                      BodyContentHandler handler, Model model) throws IOException{
+        log.info ("**** NERDictionary mode: on *** ");
+        ArrayList<String> DictionariesFound = new ArrayList<>();
+        log.info("Loading Dictionaries..Please wait");
+        List<TokenNameFinder> findersDict = getDictionariesFileForSearch(dictionaryPathList, nodeDict);
+
+        log.debug("Content: " + handlerString);
+        ArrayList probabilityListDict = new ArrayList<>();
+        String tokensDict[] = model.getTokenizer().tokenize(handler.toString());
+        tokensDict = ngrams(tokensDict, 6);
+        log.info("Applying Dictionary model...");
+        //final Span DictSpansOnly[] = dictionaryNER.find(tokensDict);
+        for (TokenNameFinder dictionaryNER : findersDict) {
+            final Span DictSpansOnly[] = dictionaryNER.find(tokensDict);
+            for(Span dictSpan : DictSpansOnly)
+            {
+                DictionariesFound.add(dictSpan.getType());
+                //DictionariesFound.add(DictSpansOnly[i].getType()); // not working - Ad all
+                log.debug("Dictionary:" + dictSpan.getType() + "," + tokensDict[dictSpan.getStart()]);
+                probabilityListDict.add(new Probability(tokensDict[dictSpan.getStart()], 0.99));
             }
 
+            dictionaryNER.clearAdaptiveData();
+        }
+        return calculateAverage(probabilityListDict);
+    }
 
-        return fileMatches;
-      }
+    private double applyNEREntropy(String handlerString, Model model, BodyContentHandler handler){
+        log.info ("**** NEREntropy mode: on *** ");
+        ArrayList DictionariesFound = new ArrayList<String>();
+        log.debug("Tokenizing for file is starting...");
+        log.debug("Content: " + handlerString);
+        String tokens[] = model.getTokenizer().tokenize(handler.toString());
+        tokens = ngrams(tokens, 3);
+        final Span nameSpans[] = model.getNameFinder().find(tokens);
+        final double[] spanProbs = model.getNameFinder().probs(nameSpans);
 
+        //display names
+        ArrayList probabilityList = new ArrayList<Probability>();
+
+        log.info("Comparing results...");
+        for( int i = 0; i < nameSpans.length; i++) {
+            log.info("Probability is: "+spanProbs[i] +" for text: " + tokens[nameSpans[i].getStart()]);
+            probabilityList.add(new Probability(tokens[nameSpans[i].getStart()], spanProbs[i]));
+        }
+        //DictionariesFound.add(nameSpans[i].getType());
+        model.getNameFinder().clearAdaptiveData();
+
+        return calculateAverage(probabilityList);
+    }
+
+    private double applyNERRegex(String handlerString, Model model, BodyContentHandler handler) throws DataDefenderException {
+        log.info ("**** NERRegex mode: on *** ");
+        ArrayList DictionariesFound = new ArrayList<String>();
+        final Properties RegexProperties = loadProperties("regex.properties");
+        log.info("Tokenizing for file is starting...");
+        log.debug("Content: " + handlerString);
+        ArrayList probabilityListRegex = new ArrayList<>();
+        final String tokensRegex[] = model.getTokenizer().tokenize(handler.toString());
+        //final List<String> suspList = new ArrayList(RegexProperties.keySet());
+        //matches = new ArrayList<>();
+        //Pattern[] patterns = new Pattern[];
+        log.info("Applying REGEX model for sensitive data...");
+        //Pattern[] patterns = suspList.stream().map(Pattern::compile).toArray(Pattern[]::new);
+        Enumeration<?> enumeration = RegexProperties.propertyNames();
+        Map<String, Pattern[]> regexMap = new HashMap<>();
+
+        while (enumeration.hasMoreElements()) {
+            String key = (String) enumeration.nextElement();
+            String value = RegexProperties.getProperty(key);
+            Pattern ptregex = Pattern.compile(value);
+            Pattern[] ptterns = new Pattern[]{ptregex};
+            //Map<String, Pattern[]> regexMap = new HashMap<>();
+            regexMap.put(key, ptterns);
+        }
+
+        RegexNameFinder finder = new RegexNameFinder(regexMap);
+        Span[] resultRegex = finder.find(tokensRegex);
+
+        log.info("Evaluating Regex results...");
+        //final String RegexSpam = Arrays.toString(Span.spansToStrings(resultRegex, tokensRegex));
+        String getRegexType = "N/A";
+        for( int i = 0; i < resultRegex.length; i++) {
+            getRegexType = resultRegex[i].getType();
+            log.debug("Found Type text: " + getRegexType);
+            DictionariesFound.add(getRegexType);
+            // default regex probability is 99% always
+            //log.info("Regex for text: " + tokensRegex[resultRegex[i].getStart()]);
+            log.debug("Found identifier text: " + tokensRegex[resultRegex[i].getStart()]);
+            probabilityListRegex.add(new Probability(tokensRegex[resultRegex[i].getStart()], 0.99));
+        }
+
+        finder.clearAdaptiveData();
+        return calculateAverage(probabilityListRegex);
+        //result.setAverageProbability(averageProbability);
+        //result.setDictionariesFound(DictionariesFoundRegex);
+    }
+
+    public static String[] ngrams(String[] singleTokens, int n){
+        /*
+            String[] singleTokes: The String array of tokens
+            int n: the size of the ngrams
+            Function that from a set of Single Tokens (example: ["This", "is", "not", "sensitive"]) and a size n, which
+            sprecifies the size of the ngram, creates and returns a new String array with the ngrams (example for size 3:
+            ["This", "This is", "This is not", "is", "is not", .....]
+
+         */
+        ArrayList<String> ngrams = new ArrayList<String>();
+
+        for(int i = 0; i < singleTokens.length; i++){
+            for(int j = 1; j <= n; j++){
+                // if((i + j) == singleTokens.length) continue;
+
+                String range[] = Arrays.copyOfRange(singleTokens, i, i + j);
+                StringJoiner ngram = new StringJoiner(" ");
+                for (String s : range){
+                    ngram.add(s);
+                }
+                ngrams.add(ngram.toString());
+            }
+        }
+        return ngrams.stream().map(c -> c.toString()).toArray(String[]::new);
+    }
 }

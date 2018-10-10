@@ -1,4 +1,6 @@
 package com.strider.datadefender.database;
+import java.io.IOException;
+import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -28,10 +30,14 @@ public class BackendDBConnection {
     private Properties properties;
 
     // create properties
-    private Properties getProperties() throws DataDefenderException {
+    private Properties getProperties() throws DataDefenderException, IOException {
 
-        final Properties dbProperties = loadProperties("backend.properties");
-
+        String resourceName = "backend.properties";
+        ClassLoader loader = Thread.currentThread().getContextClassLoader();
+        Properties dbProperties = new Properties();
+        try(InputStream resourceStream = loader.getResourceAsStream(resourceName)) {
+            dbProperties.load(resourceStream);
+        }
         if (properties == null) {
             properties = new Properties();
             properties.setProperty("user", dbProperties.getProperty("username"));
@@ -52,7 +58,7 @@ public class BackendDBConnection {
     }
 
     // connect database
-    public Connection connect() {
+    public Connection connect() throws IOException{
         if (connection == null) {
             try {
                 final Properties backEndProperties = getProperties();
