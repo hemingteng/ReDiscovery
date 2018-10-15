@@ -48,13 +48,13 @@ public class MSSQLDBConnection extends DBConnection {
         String url = getURL();
 
         try{
+            Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
             return DriverManager.getConnection(url);
         }
-        catch (SQLException e){
+        catch (ClassNotFoundException|SQLException e){
             e.printStackTrace();
             return null;
         }
-
     }
     
     /**
