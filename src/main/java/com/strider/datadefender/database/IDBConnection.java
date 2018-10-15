@@ -25,5 +25,5 @@ import java.sql.SQLException;
  * @author Armenak Grigoryan
  */
 public interface IDBConnection {
-    Connection connect() throws DatabaseAnonymizerException, SQLException;
+    Connection connect() throws DatabaseAnonymizerException;
 }

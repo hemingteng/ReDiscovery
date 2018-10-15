@@ -43,12 +43,18 @@ public class MSSQLDBConnection extends DBConnection {
      * @throws DatabaseAnonymizerException 
      */
     @Override
-    public Connection connect() throws DatabaseAnonymizerException, SQLException {
+    public Connection connect() throws DatabaseAnonymizerException{
         // return doConnect(() -> getConnection(this.getURL()));
         String url = getURL();
 
+        try{
+            return DriverManager.getConnection(url);
+        }
+        catch (SQLException e){
+            e.printStackTrace();
+            return null;
+        }
 
-        return DriverManager.getConnection(url);
     }
     
     /**
