@@ -235,7 +235,7 @@
             <artifactId>ojdbc6</artifactId>
             <version>11.2.0.3</version>
         </dependency>
-
+		
         <dependency>
             <groupId>com.microsoft.sqlserver</groupId>
             <artifactId>mssql-jdbc</artifactId>
@@ -253,6 +253,7 @@
             <artifactId>lucene-analyzers-common</artifactId>
             <version>7.4.0</version>
         </dependency>
+		
 
     </dependencies>
     <description>RedataSense 3.1 release</description>
