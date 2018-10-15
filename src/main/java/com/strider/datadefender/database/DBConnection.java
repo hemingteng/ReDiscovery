@@ -64,7 +64,8 @@ public abstract class DBConnection implements IDBConnection {
         log.info("Using driver " + driver);
         log.info("Database URL: " + url);
         log.info("Logging in using username " + userName); 
-        
+
+
         try {
             log.info("Loading database driver");
             forName(driver);
@@ -72,6 +73,7 @@ public abstract class DBConnection implements IDBConnection {
             log.error(cnfe.toString());
             throw new DatabaseAnonymizerException(cnfe.toString(), cnfe);
         }
+
     }
 
     /**

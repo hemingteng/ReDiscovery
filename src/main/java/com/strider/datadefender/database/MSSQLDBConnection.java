@@ -18,10 +18,14 @@
 
 package com.strider.datadefender.database;
 
+import org.postgresql.core.SqlCommand;
+
 import static java.sql.DriverManager.getConnection;
 
 import java.sql.Connection;
 import java.util.Properties;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 
 /**
  *
@@ -39,8 +43,12 @@ public class MSSQLDBConnection extends DBConnection {
      * @throws DatabaseAnonymizerException 
      */
     @Override
-    public Connection connect() throws DatabaseAnonymizerException {
-        return doConnect(() -> getConnection(this.getURL()));
+    public Connection connect() throws DatabaseAnonymizerException, SQLException {
+        // return doConnect(() -> getConnection(this.getURL()));
+        String url = getURL();
+
+
+        return DriverManager.getConnection(url);
     }
     
     /**

@@ -18,11 +18,12 @@
 package com.strider.datadefender.database;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 
 /**
  * Interface for all classes implementing database connection
  * @author Armenak Grigoryan
  */
 public interface IDBConnection {
-    Connection connect() throws DatabaseAnonymizerException;
+    Connection connect() throws DatabaseAnonymizerException, SQLException;
 }
