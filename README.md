@@ -1,5 +1,5 @@
 
-RedataSense - Data Discovery with Machine Learning
+ReDiscovery - Data Discovery with Machine Learning
 ========================================
 
 Disclaimer
@@ -42,7 +42,7 @@ Please note, that we strongly recommend using version 3.0 and later.
 How to install (v3.0 and later)
 ----------
 
-Note: Version 3.0 and later came with a new features and a lot of code rework. One thing that really changed from version 2.0 was that Redatasense will use an MySQL database as backend to save and store the results from Data Discovery.
+Note: Version 3.0 and later came with a new features and a lot of code rework. One thing that really changed from version 2.0 was that ReDiscovery will use an MySQL database as backend to save and store the results from Data Discovery.
 
 1) Install software
 
@@ -134,5 +134,5 @@ mvn install:install-file -Dfile=${path to jdbc driver jar file} -DgroupId=${grou
 
 Important Note
 ----------
-- Redatasense Analytics Portal (RAP) is not opensource.
-- Redatasense NLP models or dictionaries are not opensource.
+- ReDiscovery Analytics Portal (RAP) is not opensource.
+- Rediscovery NLP models or dictionaries are not opensource.
